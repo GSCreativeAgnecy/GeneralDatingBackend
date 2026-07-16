@@ -6,14 +6,14 @@
   <title>Discover</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/app/css/app.css?v=1">
+  <link rel="stylesheet" href="/app/css/app.css?v=2">
 </head>
 <body>
   <div id="app"></div>
   <div id="matchModal"></div>
 
-  <script src="/app/js/api.js?v=1"></script>
-  <script src="/app/js/components.js?v=1"></script>
+  <script src="/app/js/api.js?v=2"></script>
+  <script src="/app/js/components.js?v=2"></script>
   <script>
     redirectIfNoAuth();
 
@@ -57,13 +57,13 @@
         loadStats();
       } catch (e) {
         showToast(e.message, 'error');
-        document.getElementById('swipeStack').innerHTML = emptyHTML('😔', 'No profiles found', 'Check back later or update your preferences.', '<a href="/app/settings.html" class="btn btn-primary">Update Preferences</a>');
+        document.getElementById('swipeStack').innerHTML = emptyHTML('😔', 'No profiles found', 'Check back later or update your preferences.', '<a href="/app/settings" class="btn btn-primary">Update Preferences</a>');
       }
     }
 
     function renderCurrentCard() {
       if (currentIndex >= profiles.length) {
-        document.getElementById('swipeStack').innerHTML = emptyHTML('🎉', 'All caught up!', 'You\'ve seen everyone in your area. Check back later or update your preferences.', '<a href="/app/settings.html" class="btn btn-primary">Update Preferences</a>');
+        document.getElementById('swipeStack').innerHTML = emptyHTML('🎉', 'All caught up!', 'You\'ve seen everyone in your area. Check back later or update your preferences.', '<a href="/app/settings" class="btn btn-primary">Update Preferences</a>');
         document.getElementById('swipeActions').style.display = 'none';
         return;
       }
@@ -177,7 +177,7 @@
             </div>
             <h2>It's a <span>Match!</span></h2>
             <p>You and ${profile.first_name || 'Someone'} liked each other</p>
-            <button class="btn btn-primary btn-block" onclick="document.getElementById('matchModal').innerHTML='';location.href='/app/matches.html'">Send a Message</button>
+            <button class="btn btn-primary btn-block" onclick="document.getElementById('matchModal').innerHTML='';location.href='/app/matches'">Send a Message</button>
             <button class="btn btn-outline btn-block mt-2" onclick="document.getElementById('matchModal').innerHTML=''">Keep Swiping</button>
           </div>
         </div>`;

@@ -190,7 +190,28 @@ if Path("static/admin").exists():
     app.mount("/admin", StaticFiles(directory="static/admin", html=True), name="admin")
 
 if Path("static/app").exists():
-    app.mount("/app", StaticFiles(directory="static/app", html=True), name="app")
+    app.mount("/app/css", StaticFiles(directory="static/app/css"), name="app_css")
+    app.mount("/app/js", StaticFiles(directory="static/app/js"), name="app_js")
+
+    @app.get("/app", response_class=HTMLResponse)
+    async def app_index():
+        return HTMLResponse(Path("static/app/index.html").read_text(encoding="utf-8"))
+
+    @app.get("/app/", response_class=HTMLResponse)
+    async def app_index_slash():
+        return HTMLResponse(Path("static/app/index.html").read_text(encoding="utf-8"))
+
+    @app.get("/app/matches", response_class=HTMLResponse)
+    async def app_matches():
+        return HTMLResponse(Path("static/app/matches.html").read_text(encoding="utf-8"))
+
+    @app.get("/app/profile", response_class=HTMLResponse)
+    async def app_profile():
+        return HTMLResponse(Path("static/app/profile.html").read_text(encoding="utf-8"))
+
+    @app.get("/app/settings", response_class=HTMLResponse)
+    async def app_settings():
+        return HTMLResponse(Path("static/app/settings.html").read_text(encoding="utf-8"))
 
 
 @app.get("/api/v1/health")
