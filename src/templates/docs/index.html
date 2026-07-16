@@ -1,0 +1,16 @@
+{% extends "docs/base.html" %}
+{% block title %}Documentation{% endblock %}
+{% block content %}
+<h1>Ardhang Matrimony — Internal Documentation</h1>
+<p>Welcome to the internal documentation portal. Select a page from the sidebar to begin.</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+    {% for item in nav %}
+    <a href="{{ item.url }}" class="block p-4 rounded-lg bg-gray-800 border border-gray-700 hover:border-blue-500 transition-colors">
+        <div class="font-semibold text-blue-400">{{ item.label }}</div>
+        {% if item.children %}
+        <div class="text-xs text-gray-500 mt-1">{{ item.children | length }} pages</div>
+        {% endif %}
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "docs/base.html" %}
+{% block title %}Not Found{% endblock %}
+{% block content %}
+<div class="text-center py-16">
+    <h1 class="text-6xl font-bold text-gray-600 mb-4">404</h1>
+    <p class="text-xl text-gray-400 mb-8">Page not found</p>
+    <p class="text-gray-500 mb-8">The page <code class="text-yellow-400">{{ request_path }}</code> does not exist in the documentation.</p>
+    <a href="/internal-docs" class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+        Back to Documentation
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: arghang-db
+    expose:
+      - "5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-ardhang}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ardhang}
+      - POSTGRES_DB=${POSTGRES_DB:-ardhang}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arghang-api
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - APP_NAME=${APP_NAME:-Ardhang Matrimony}
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-ardhang}:${POSTGRES_PASSWORD:-ardhang}@db:5432/${POSTGRES_DB:-ardhang}
+      - JWT_SECRET=${JWT_SECRET:-}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - DEBUG=${DEBUG:-false}
+      - UPLOAD_DIR=/app/data/uploads
+      - OTP_BYPASS=${OTP_BYPASS:-}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-30}
+      - CORS_ORIGINS=${CORS_ORIGINS:-}
+      - ADMIN_PHONES=${ADMIN_PHONES:-0000000000}
+      - ENABLE_INTERNAL_DOCS=${ENABLE_INTERNAL_DOCS:-false}
+      - DEFAULT_CURRENCY=${DEFAULT_CURRENCY:-INR}
+      # ── OTP Providers ──
+      - PREFERRED_OTP_PROVIDER=${PREFERRED_OTP_PROVIDER:-}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE=${TWILIO_PHONE:-}
+      - ANDROID_SMS_GATEWAY_URL=${ANDROID_SMS_GATEWAY_URL:-}
+      - ANDROID_SMS_GATEWAY_API_KEY=${ANDROID_SMS_GATEWAY_API_KEY:-}
+      # ── SMTP ──
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM_NAME=${SMTP_FROM_NAME:-Ardhang Matrimony}
+      - NOTIFY_EMAIL=${NOTIFY_EMAIL:-}
+      # ── Payment Processors ──
+      - ACTIVE_PAYMENT_PROCESSORS=${ACTIVE_PAYMENT_PROCESSORS:-}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_PUBLIC_KEY=${STRIPE_PUBLIC_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID:-}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET:-}
+      - RAZORPAY_WEBHOOK_SECRET=${RAZORPAY_WEBHOOK_SECRET:-}
+      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID:-}
+      - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET:-}
+      - PAYPAL_WEBHOOK_ID=${PAYPAL_WEBHOOK_ID:-}
+      - PAYPAL_MODE=${PAYPAL_MODE:-sandbox}
+      - HELCIM_API_TOKEN=${HELCIM_API_TOKEN:-}
+      - HELCIM_ACCOUNT_ID=${HELCIM_ACCOUNT_ID:-}
+      - HELCIM_WEBHOOK_SECRET=${HELCIM_WEBHOOK_SECRET:-}
+      - HELCIM_MODE=${HELCIM_MODE:-sandbox}
+    volumes:
+      - uploads:/app/data/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  pgdata:
+  uploads:

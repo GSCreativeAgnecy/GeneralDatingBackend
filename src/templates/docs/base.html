@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ardhang Docs{% endblock %} — Internal Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { typography: { DEFAULT: { css: { maxWidth: 'none' } } } } }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets@11.9/styles/github-dark.min.css">
+    <script>hljs.highlightAll();</script>
+    <style>
+        .prose pre { background: #1e293b; border-radius: 0.5rem; padding: 1rem; overflow-x: auto; }
+        .prose code { font-size: 0.875rem; }
+        .prose table { width: 100%; border-collapse: collapse; }
+        .prose th, .prose td { border: 1px solid #475569; padding: 0.5rem 0.75rem; text-align: left; }
+        .prose th { background: #334155; font-weight: 600; }
+        .prose blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; color: #94a3b8; }
+        .prose h1, .prose h2, .prose h3, .prose h4 { scroll-margin-top: 5rem; }
+        .prose h1 { font-size: 2rem; font-weight: 700; margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid #334155; padding-bottom: 0.5rem; }
+        .prose h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2rem; margin-bottom: 0.75rem; }
+        .prose h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .prose ul { list-style: disc; padding-left: 1.5rem; }
+        .prose ol { list-style: decimal; padding-left: 1.5rem; }
+        .prose li { margin-bottom: 0.25rem; }
+        .prose a { color: #60a5fa; text-decoration: underline; }
+        .code-block-wrapper { position: relative; }
+        .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.75rem; background: #334155; color: #cbd5e1; border: none; border-radius: 0.25rem; cursor: pointer; opacity: 0; transition: opacity 0.2s; }
+        .code-block-wrapper:hover .copy-btn { opacity: 1; }
+        @media print { .sidebar, .topbar, .breadcrumb { display: none; } .content { margin-left: 0 !important; } }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            document.querySelectorAll('.code-block-wrapper pre code').forEach(block => hljs.highlightElement(block));
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.parentElement.querySelector('code').textContent;
+                    navigator.clipboard.writeText(code).then(() => {
+                        btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000);
+                    });
+                });
+            });
+            const mb = document.getElementById('mobile-menu-btn');
+            const sb = document.getElementById('sidebar');
+            if (mb && sb) mb.addEventListener('click', () => sb.classList.toggle('hidden'));
+        });
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+    </script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+    <header class="fixed top-0 left-0 right-0 z-50 h-14 bg-gray-900 border-b border-gray-800 flex items-center px-4 gap-4">
+        <button id="mobile-menu-btn" class="lg:hidden text-gray-400 hover:text-white p-1">&equiv;</button>
+        <a href="/internal-docs" class="font-semibold text-blue-400 shrink-0">Ardhang Docs</a>
+        <div class="flex-1"></div>
+        <button onclick="toggleTheme()" class="text-gray-400 hover:text-white text-sm px-2 py-1 rounded bg-gray-800 border border-gray-700">&circ;</button>
+        <span class="text-xs text-gray-500 hidden sm:inline">Internal</span>
+    </header>
+
+    <aside id="sidebar" class="fixed top-14 left-0 bottom-0 w-64 bg-gray-900 border-r border-gray-800 overflow-y-auto z-40 hidden lg:block">
+        <nav class="p-4">
+            {% include "docs/sidebar.html" %}
+        </nav>
+    </aside>
+
+    <main class="pt-14 lg:ml-64">
+        {% block breadcrumb %}
+        <div class="px-6 py-3 bg-gray-900/50 border-b border-gray-800 text-sm text-gray-400">
+            <a href="/internal-docs" class="hover:text-blue-400">Docs</a>
+            {% for crumb in breadcrumbs %}
+            <span class="mx-1">/</span>
+            {% if crumb.active %}<span>{{ crumb.label }}</span>{% else %}<a href="{{ crumb.url }}" class="hover:text-blue-400">{{ crumb.label }}</a>{% endif %}
+            {% endfor %}
+        </div>
+        {% endblock %}
+
+        <div class="max-w-4xl mx-auto px-6 py-8 prose prose-invert">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>

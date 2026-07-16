@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Brownies — Upgrade to Premium</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] },
+          colors: {
+            brown: {
+              50:  '#fcf8f3', 100: '#f5ebe1', 200: '#ebd9c8', 300: '#d9b99e',
+              400: '#c49a78', 500: '#a8774f', 600: '#8b5a3c', 700: '#6b3f2e',
+              800: '#4a2c20', 900: '#2d1810',
+            },
+            gold: { DEFAULT: '#d4a358', light: '#f0d6a8' },
+            rose: { DEFAULT: '#e8736a', dark: '#c94d44' },
+            cream:  '#fff8f0',
+          },
+          boxShadow: {
+            'card': '0 4px 24px rgba(45,24,16,0.08)',
+            'card-lg': '0 12px 48px rgba(45,24,16,0.12)',
+            'btn': '0 4px 16px rgba(74,44,32,0.3)',
+          },
+          borderRadius: { card: '20px', btn: '60px' },
+        }
+      }
+    }
+  </script>
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    .pulse { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  </style>
+</head>
+<body class="bg-brown-50 font-sans text-brown-900 min-h-screen antialiased">
+  <div class="max-w-md mx-auto p-4 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <div class="text-center pt-8 pb-6">
+      <div class="w-16 h-16 bg-gradient-to-br from-brown-600 to-brown-700 rounded-2xl mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">B</div>
+      <h1 class="text-2xl font-extrabold text-brown-800">Brownies Premium</h1>
+      <p class="text-brown-500 text-sm mt-1">Unlock everything dating has to offer</p>
+    </div>
+
+    <!-- Step 1: Login / Verify Identity -->
+    <div id="step-login" class="flex-1">
+      <div class="flex bg-white rounded-xl border border-brown-200 p-1 mb-3">
+        <button onclick="switchAuthTab('otp')" id="atab-otp" class="w-1/2 py-2.5 rounded-lg text-sm font-semibold transition bg-brown-600 text-white">OTP Login</button>
+        <button onclick="switchAuthTab('password')" id="atab-password" class="w-1/2 py-2.5 rounded-lg text-sm font-semibold text-brown-500 transition">Email / Password</button>
+      </div>
+
+      <!-- OTP Panel -->
+      <div id="apanel-otp" class="bg-white rounded-card shadow-card border border-brown-200 p-6">
+        <label class="block text-sm font-semibold text-brown-700 mb-2">Phone Number</label>
+        <div class="flex gap-2 mb-3">
+          <input id="phoneInput" type="tel" maxlength="10" inputmode="numeric" placeholder="10-digit number" class="flex-1 px-4 py-3 border border-brown-200 rounded-xl text-sm focus:outline-none focus:border-brown-500" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+          <button onclick="sendOtp()" id="sendOtpBtn" class="px-5 py-3 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-brown-700 to-brown-800 shadow-btn hover:-translate-y-0.5 transition-all duration-300 whitespace-nowrap">Send OTP</button>
+        </div>
+        <div id="otpSection" class="hidden">
+          <label class="block text-sm font-semibold text-brown-700 mb-2">OTP Code</label>
+          <div class="flex gap-2">
+            <input id="otpInput" type="tel" maxlength="6" inputmode="numeric" placeholder="6-digit code" class="flex-1 px-4 py-3 border border-brown-200 rounded-xl text-sm tracking-[0.3em] text-center text-lg font-bold focus:outline-none focus:border-brown-500" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            <button onclick="verifyOtp()" id="verifyBtn" class="px-5 py-3 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-green-600 to-green-700 shadow-btn hover:-translate-y-0.5 transition-all duration-300 whitespace-nowrap">Continue</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email/Password Panel -->
+      <div id="apanel-password" class="hidden bg-white rounded-card shadow-card border border-brown-200 p-6">
+        <label class="block text-sm font-semibold text-brown-700 mb-2">Email or Phone</label>
+        <input id="emailInput" type="text" placeholder="your@email.com or phone number" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 focus:outline-none focus:border-brown-500">
+        <label class="block text-sm font-semibold text-brown-700 mb-2">Password</label>
+        <input id="passInput" type="password" placeholder="Your password" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-4 focus:outline-none focus:border-brown-500">
+        <button onclick="passwordLogin()" id="loginBtn" class="w-full py-3 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-green-600 to-green-700 shadow-btn hover:-translate-y-0.5 transition-all duration-300">Continue</button>
+        <p class="text-xs text-brown-400 text-center mt-3">No account? <a href="/login" class="text-brown-600 font-semibold underline">Register here</a> first</p>
+      </div>
+
+      <p id="loginError" class="text-rose-500 text-xs mt-3 hidden"></p>
+      <div class="text-xs text-center text-brown-400 mt-4">
+        <span class="inline-block mr-1">&#128274;</span> Secure payment via Stripe
+      </div>
+    </div>
+
+    <!-- Step 2: Plans -->
+    <div id="step-plans" class="hidden flex-1">
+      <div id="userBar" class="bg-white rounded-card shadow-card border border-brown-200 p-3 mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="userAvatar" class="w-9 h-9 rounded-full bg-gradient-to-br from-brown-500 to-brown-600 flex items-center justify-center text-white text-sm font-bold">?</div>
+          <span id="userName" class="text-sm font-semibold text-brown-700">Loading...</span>
+        </div>
+        <button onclick="logout()" class="px-4 py-1.5 rounded-btn text-xs font-semibold border border-rose text-rose hover:bg-rose-50 transition">Logout</button>
+      </div>
+      <div id="plansContainer" class="space-y-3 mb-6">
+        <div class="text-center text-brown-400 py-8 pulse">Loading plans...</div>
+      </div>
+      <button onclick="goToLogin()" class="w-full py-3 rounded-btn font-semibold text-sm border border-brown-200 text-brown-600 hover:bg-brown-100 transition">&larr; Back</button>
+    </div>
+
+    <!-- Step 3: Processing -->
+    <div id="step-processing" class="hidden flex-1 flex items-center justify-center">
+      <div class="text-center">
+        <div class="w-12 h-12 border-4 border-brown-200 border-t-brown-600 rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-brown-600 font-semibold">Redirecting to Stripe...</p>
+        <p class="text-brown-400 text-sm mt-1">You'll be redirected to complete your payment</p>
+      </div>
+    </div>
+
+    <!-- Step 4: Success -->
+    <div id="step-success" class="hidden flex-1 flex flex-col items-center justify-center text-center">
+      <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
+        <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <h2 class="text-xl font-extrabold text-brown-800 mb-2">Welcome to Premium!</h2>
+      <p id="successMsg" class="text-brown-500 mb-6">Your subscription is now active</p>
+      <button onclick="location.reload()" class="px-8 py-3 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-brown-700 to-brown-800 shadow-btn hover:-translate-y-0.5 transition-all duration-300">Done</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-[10px] text-brown-400 pb-4 mt-4">
+      By purchasing you agree to Brownies Terms of Service
+    </div>
+
+  </div>
+
+  <script>
+    const API = '/api/v1';
+    let selectedPlan = null;
+    let selectedPlanPrice = 0;
+    let authToken = new URLSearchParams(window.location.search).get('token') || '';
+    let authMethod = null;
+
+    // On load
+    (async function init() {
+      fetchPlans();
+      if (authToken) {
+        document.getElementById('step-login').classList.add('hidden');
+        document.getElementById('step-plans').classList.remove('hidden');
+        loadUserProfile();
+      }
+    })();
+
+    async function fetchPlans() {
+      try {
+        const res = await fetch(API + '/subscriptions/plans');
+        const data = await res.json();
+        const plans = data.plans || [];
+        const paid = plans.filter(p => parseInt(p.price) > 0);
+        const container = document.getElementById('plansContainer');
+        container.innerHTML = paid.map(p => {
+          const priceInr = (parseInt(p.price) / 100).toFixed(0);
+          const features = [];
+          if (p.swipes_per_day != null) features.push(`${p.swipes_per_day} likes/day`);
+          else features.push('Unlimited likes');
+          if (p.super_likes_per_day != null) features.push(`${p.super_likes_per_day} super likes/day`);
+          else features.push('Unlimited super likes');
+          if (p.messages) features.push('Unlimited messages');
+          if (p.see_who_liked_you) features.push('See who liked you');
+          if (p.no_ads) features.push('No ads');
+          if (p.read_receipts) features.push('Read receipts');
+          if (p.incognito_mode) features.push('Incognito mode');
+          if (p.verified_badge) features.push('Verified badge');
+          if (p.boosts_per_month) features.push(`${p.boosts_per_month} boost${p.boosts_per_month>1?'s':''}/month`);
+          const featureHtml = features.slice(0, 6).map(f => `<div class="flex items-center gap-1.5 text-xs"><span class="text-green-600 font-bold">&#10003;</span><span class="text-brown-600">${f}</span></div>`).join('');
+
+          return `<div onclick="selectPlan('${p.id}', '${p.name.replace(/'/g,"\\'")}', ${p.price}, this)" class="bg-white rounded-card shadow-card border-2 border-brown-200 p-5 cursor-pointer hover:border-brown-400 transition-all duration-300">
+            <div class="flex items-center justify-between mb-3">
+              <div><h3 class="font-bold text-brown-800">${esc(p.name)}</h3><p class="text-brown-500 text-xs">${p.duration_days} days</p></div>
+              <div class="text-right"><p class="text-xl font-extrabold text-brown-700">₹${priceInr}</p><p class="text-[10px] text-brown-400">${(priceInr / p.duration_days).toFixed(0)}/day</p></div>
+            </div>
+            <div class="border-t border-brown-100 pt-3 grid grid-cols-2 gap-x-3 gap-y-1">${featureHtml}</div>
+          </div>`;
+        }).join('');
+        if (paid.length === 0) container.innerHTML = '<div class="text-center text-brown-400 py-8">No plans available</div>';
+      } catch(e) { document.getElementById('plansContainer').innerHTML = '<div class="text-center text-rose-500 py-8">Failed to load plans</div>'; }
+    }
+
+    function showLogin() { document.getElementById('step-login').classList.remove('hidden'); document.getElementById('step-plans').classList.add('hidden'); }
+    function showPlans() { document.getElementById('step-login').classList.add('hidden'); document.getElementById('step-plans').classList.remove('hidden'); loadUserProfile(); }
+    function goToLogin() { authToken = ''; authMethod = null; showLogin(); selectedPlan = null; }
+    function logout() { authToken = ''; authMethod = null; showLogin(); selectedPlan = null; }
+
+    async function loadUserProfile() {
+      const avatar = document.getElementById('userAvatar');
+      const nameEl = document.getElementById('userName');
+      if (!authToken) { avatar.textContent = '?'; nameEl.textContent = 'Not logged in'; return; }
+      try {
+        const res = await fetch(API + '/profile/me', { headers: { 'Authorization': 'Bearer ' + authToken } });
+        if (res.ok) {
+          const u = await res.json();
+          avatar.textContent = (u.name || 'U').charAt(0).toUpperCase();
+          nameEl.textContent = u.name || 'User';
+        } else {
+          const payload = JSON.parse(atob(authToken.split('.')[1]));
+          avatar.textContent = '#'; nameEl.textContent = 'User #' + payload.sub;
+        }
+      } catch(e) {
+        try { const p = JSON.parse(atob(authToken.split('.')[1])); avatar.textContent = '#'; nameEl.textContent = 'User #' + p.sub; }
+        catch { avatar.textContent = '?'; nameEl.textContent = 'Logged in'; }
+      }
+    }
+
+    function selectPlan(id, name, price, el) {
+      document.querySelectorAll('#plansContainer > div').forEach(d => d.classList.remove('border-brown-500', 'bg-brown-50'));
+      el.classList.add('border-brown-500', 'bg-brown-50');
+      selectedPlan = id;
+      selectedPlanPrice = price;
+      createCheckout();
+    }
+
+    async function createCheckout() {
+      const errEl = document.getElementById('loginError');
+      errEl.classList.add('hidden');
+      document.getElementById('step-plans').classList.add('hidden');
+      document.getElementById('step-processing').classList.remove('hidden');
+
+      try {
+        if (!authToken) {
+          document.getElementById('step-processing').classList.add('hidden');
+          errEl.textContent = 'Please log in first'; errEl.classList.remove('hidden');
+          showLogin(); return;
+        }
+
+        const res = await fetch(`${API}/subscriptions/checkout-session?plan_id=${selectedPlan}`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + authToken },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to create checkout');
+
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+        } else {
+          throw new Error('No checkout URL returned');
+        }
+      } catch(e) {
+        document.getElementById('step-processing').classList.add('hidden');
+        errEl.textContent = e.message; errEl.classList.remove('hidden');
+        showLogin();
+      }
+    }
+
+    function switchAuthTab(tab) {
+      document.getElementById('apanel-otp').classList.toggle('hidden', tab !== 'otp');
+      document.getElementById('apanel-password').classList.toggle('hidden', tab !== 'password');
+      document.getElementById('atab-otp').classList.toggle('bg-brown-600', tab === 'otp');
+      document.getElementById('atab-otp').classList.toggle('text-white', tab === 'otp');
+      document.getElementById('atab-otp').classList.toggle('text-brown-500', tab !== 'otp');
+      document.getElementById('atab-password').classList.toggle('bg-brown-600', tab === 'password');
+      document.getElementById('atab-password').classList.toggle('text-white', tab === 'password');
+      document.getElementById('atab-password').classList.toggle('text-brown-500', tab !== 'password');
+      document.getElementById('loginError').classList.add('hidden');
+    }
+
+    async function sendOtp() {
+      const phone = document.getElementById('phoneInput').value.trim();
+      if (phone.length !== 10) return alert('Enter a valid 10-digit phone number');
+      const btn = document.getElementById('sendOtpBtn');
+      btn.disabled = true; btn.textContent = 'Sending...';
+      try {
+        await fetch(API + '/auth/send-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone_number: phone }) });
+        document.getElementById('otpSection').classList.remove('hidden');
+        document.getElementById('otpInput').focus();
+        btn.textContent = 'Resend';
+      } catch(e) { alert('Failed to send OTP'); }
+      finally { btn.disabled = false; }
+    }
+
+    async function verifyOtp() {
+      const phone = document.getElementById('phoneInput').value.trim();
+      const otp = document.getElementById('otpInput').value.trim();
+      const errEl = document.getElementById('loginError');
+      if (!phone || otp.length !== 6) { errEl.textContent = 'Enter phone and 6-digit OTP'; errEl.classList.remove('hidden'); return; }
+      errEl.classList.add('hidden');
+      try {
+        const res = await fetch(API + '/auth/verify-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone_number: phone, otp }) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Invalid OTP');
+        authToken = data.access_token; authMethod = 'otp';
+        showPlans();
+      } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
+    }
+
+    async function passwordLogin() {
+      const identifier = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passInput').value;
+      const errEl = document.getElementById('loginError');
+      if (!identifier || !password) { errEl.textContent = 'Enter email/phone and password'; errEl.classList.remove('hidden'); return; }
+      errEl.classList.add('hidden');
+      try {
+        const isEmail = identifier.includes('@');
+        const body = isEmail ? { email: identifier, password } : { phone_number: identifier, password };
+        const res = await fetch(API + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Login failed');
+        authToken = data.access_token; authMethod = 'password';
+        showPlans();
+      } catch(e) { errEl.textContent = e.message; errEl.classList.remove('hidden'); }
+    }
+
+    function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    (async function() {
+      try {
+        const res = await fetch('/api/v1/branding');
+        if (!res.ok) return;
+        const b = await res.json();
+        document.title = (b.app_name || 'Brownies') + ' — Upgrade to Premium';
+        if (b.primary_color === '#6B3F2E' && b.secondary_color === '#4A2C20' && b.accent_color === '#D4A358') return;
+        const fn = 'function ht(h){var r=parseInt(h.substring(1,3),16),g=parseInt(h.substring(3,5),16),b=parseInt(h.substring(5,7),16);return{r:r,g:g,b:b}}';
+        eval(fn);
+        function rh(r,g,b){return "#"+[r,g,b].map(function(x){return Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,"0")}).join("")}
+        function hs(h){var r=parseInt(h.substring(1,3),16)/255,g=parseInt(h.substring(3,5),16)/255,b=parseInt(h.substring(5,7),16)/255;
+          var M=Math.max(r,g,b),m=Math.min(r,g,b),d=M-m,L=(M+m)/2,H=0,S=0;
+          if(d!==0){S=L>0.5?d/(2-M-m):d/(M+m);switch(M){case r:H=((g-b)/d+(g<b?6:0))/6;break;case g:H=((b-r)/d+2)/6;break;case b:H=((r-g)/d+4)/6}}
+          return{h:Math.round(H*360),s:Math.round(S*100),l:Math.round(L*100)}}
+        function sh(h,s,l){h/=360;s/=100;l/=100;
+          var q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;
+          function u(t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p}
+          return rh(Math.round(u(h+1/3)*255),Math.round(u(h)*255),Math.round(u(h-1/3)*255))}
+        var ph=hs(b.primary_color||"#6B3F2E");
+        var L={50:94,100:88,200:78,300:64,400:50,500:38,600:26},S={50:-20,100:-10,200:-5,300:0,400:3,500:5,600:8};
+        var sd={};
+        for(var k in L){sd[k]=sh(ph.h,Math.max(0,ph.s+S[k]),L[k])}
+        sd[700]=b.primary_color||"#6B3F2E";
+        sd[800]=sh(ph.h,Math.min(100,ph.s+5),Math.max(4,ph.l-16));
+        sd[900]=sh(ph.h,Math.min(100,ph.s+5),Math.max(2,ph.l-26));
+        var gold=(b.accent_color||"#D4A358"),ah=hs(b.accent_color||"#D4A358");
+        var rose=sh((ph.h+15)%360,Math.min(100,ph.s+25),Math.min(80,ph.l+15));
+        var cream=sh(ph.h,Math.max(0,ph.s-10),96);
+        var css="";
+        ["50","100","200","300","400","500","600","700","800","900"].forEach(function(sn){var c=sh[sn];css+=".bg-brown-"+sn+"{background-color:"+c+"!important}.text-brown-"+sn+"{color:"+c+"!important}.border-brown-"+sn+"{border-color:"+c+"!important}.hover\\:bg-brown-"+sn+":hover{background-color:"+c+"!important}.from-brown-"+sn+"{--tw-gradient-from:"+c+"!important}.to-brown-"+sn+"{--tw-gradient-to:"+c+"!important}"});
+        css+=".text-gold{color:"+gold+"!important}.bg-gold{background-color:"+gold+"!important}.border-gold{border-color:"+gold+"!important}";
+        css+=".bg-rose{background-color:"+rose+"!important}.text-rose{color:"+rose+"!important}";
+        css+=".shadow-card{box-shadow:0 4px 24px "+(b.primary_color||"#6B3F2E")+"14!important}";
+        css+=".shadow-btn{box-shadow:0 4px 16px "+(b.primary_color||"#6B3F2E")+"4D!important}";
+        css+=".bg-cream,.bg-brown-50\\/90{background-color:"+cream+"!important}";
+        var st=document.createElement("style");st.id="branding-style";st.textContent=css;document.head.appendChild(st);
+      } catch(e) {}
+    })();
+  </script>
+</body>
+</html>

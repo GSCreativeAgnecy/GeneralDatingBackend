@@ -1,0 +1,20 @@
+<ul class="space-y-1 text-sm">
+    {% for item in nav %}
+    <li>
+        {% if item.children %}
+        <details open class="group">
+            <summary class="cursor-pointer font-medium text-gray-300 hover:text-white py-1">{{ item.label }}</summary>
+            <ul class="ml-3 mt-1 space-y-0.5 border-l border-gray-700 pl-3">
+                {% for child in item.children %}
+                <li>
+                    <a href="{{ child.url }}" class="block py-0.5 text-gray-400 hover:text-blue-400 truncate {% if child.get('active') %}text-blue-400 font-medium{% endif %}">{{ child.label }}</a>
+                </li>
+                {% endfor %}
+            </ul>
+        </details>
+        {% else %}
+        <a href="{{ item.url }}" class="block py-1 font-medium text-gray-300 hover:text-white truncate {% if item.get('active') %}text-blue-400{% endif %}">{{ item.label }}</a>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>

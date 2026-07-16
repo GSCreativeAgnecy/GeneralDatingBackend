@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Brownies — Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','-apple-system','BlinkMacSystemFont','sans-serif']},colors:{brown:{50:'#fcf8f3',100:'#f5ebe1',200:'#ebd9c8',300:'#d9b99e',400:'#c49a78',500:'#a8774f',600:'#8b5a3c',700:'#6b3f2e',800:'#4a2c20',900:'#2d1810'},gold:{DEFAULT:'#d4a358',light:'#f0d6a8'},rose:{DEFAULT:'#e8736a',dark:'#c94d44'},cream:'#fff8f0'},boxShadow:{card:'0 4px 24px rgba(45,24,16,0.08)','card-lg':'0 12px 48px rgba(45,24,16,0.12)',btn:'0 4px 16px rgba(74,44,32,0.3)'},borderRadius:{card:'20px',btn:'60px'}}}}</script>
+  <style>body{-webkit-tap-highlight-color:transparent}</style>
+</head>
+<body class="bg-brown-50 font-sans text-brown-900 min-h-screen antialiased">
+
+<div class="max-w-md mx-auto p-4 min-h-screen flex flex-col justify-center">
+
+  <!-- Logo -->
+  <div class="text-center mb-8">
+    <div class="w-16 h-16 bg-gradient-to-br from-brown-600 to-brown-700 rounded-2xl mx-auto mb-3 flex items-center justify-center text-white text-2xl font-bold">B</div>
+    <h1 class="text-2xl font-extrabold text-brown-800">Brownies</h1>
+    <p class="text-brown-500 text-sm">Dating, Desi Style</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex bg-white rounded-xl border border-brown-200 p-1 mb-4">
+    <button onclick="switchTab('otp')" id="tab-otp" class="flex-1 py-2.5 rounded-lg text-sm font-semibold transition bg-brown-600 text-white">OTP Login</button>
+    <button onclick="switchTab('password')" id="tab-password" class="flex-1 py-2.5 rounded-lg text-sm font-semibold text-brown-500 transition">Password</button>
+    <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-2.5 rounded-lg text-sm font-semibold text-brown-500 transition">Register</button>
+  </div>
+
+  <!-- OTP Login -->
+  <div id="panel-otp" class="bg-white rounded-card shadow-card border border-brown-200 p-6">
+    <p class="text-xs text-brown-400 mb-4">We'll send a 6-digit code to your phone</p>
+    <input id="otpPhone" type="tel" maxlength="10" inputmode="numeric" placeholder="Phone number" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 focus:outline-none focus:border-brown-500">
+    <div id="otpCodeSection" class="hidden">
+      <input id="otpCode" type="tel" maxlength="6" inputmode="numeric" placeholder="6-digit OTP" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 tracking-[0.3em] text-center text-lg font-bold focus:outline-none focus:border-brown-500">
+    </div>
+    <p id="otpError" class="text-rose-500 text-xs mb-3 hidden"></p>
+    <button onclick="sendOtp()" id="otpBtn" class="w-full py-3 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-brown-700 to-brown-800 shadow-btn hover:-translate-y-0.5 transition-all duration-300">Send OTP</button>
+  </div>
+
+  <!-- Password Login -->
+  <div id="panel-password" class="hidden bg-white rounded-card shadow-card border border-brown-200 p-6">
+    <p class="text-xs text-brown-400 mb-4">Login with your email/phone and password</p>
+    <input id="pwIdentifier" type="text" placeholder="Email or Phone number" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 focus:outline-none focus:border-brown-500">
+    <input id="pwPassword" type="password" placeholder="Password" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 focus:outline-none focus:border-brown-500">
+    <p id="pwError" class="text-rose-500 text-xs mb-3 hidden"></p>
+    <button onclick="passwordLogin()" class="w-full py-3 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-brown-700 to-brown-800 shadow-btn hover:-translate-y-0.5 transition-all duration-300">Login</button>
+  </div>
+
+  <!-- Register -->
+  <div id="panel-register" class="hidden bg-white rounded-card shadow-card border border-brown-200 p-6">
+    <p class="text-xs text-brown-400 mb-4">Create an account with email and password</p>
+    <input id="regName" type="text" placeholder="Full Name" maxlength="50" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 focus:outline-none focus:border-brown-500">
+    <input id="regEmail" type="email" placeholder="Email address" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 focus:outline-none focus:border-brown-500">
+    <input id="regPhone" type="tel" maxlength="10" inputmode="numeric" placeholder="Phone number (optional)" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 focus:outline-none focus:border-brown-500">
+    <input id="regPassword" type="password" placeholder="Password (min 6 chars)" class="w-full px-4 py-3 border border-brown-200 rounded-xl text-sm mb-3 focus:outline-none focus:border-brown-500">
+    <p id="regError" class="text-rose-500 text-xs mb-3 hidden"></p>
+    <button onclick="register()" class="w-full py-3 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-green-600 to-green-700 shadow-btn hover:-translate-y-0.5 transition-all duration-300">Create Account</button>
+  </div>
+
+  <!-- Result -->
+  <div id="panel-result" class="hidden bg-white rounded-card shadow-card border border-brown-200 p-6 text-center">
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+      <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+    </div>
+    <h2 id="resultTitle" class="text-lg font-extrabold text-brown-800 mb-1">Success!</h2>
+    <p id="resultMsg" class="text-brown-500 text-sm mb-4"></p>
+    <div class="bg-brown-50 rounded-xl p-3 text-left text-xs font-mono text-brown-600 break-all max-h-32 overflow-auto" id="tokenDisplay"></div>
+    <button onclick="location.reload()" class="mt-4 w-full py-3 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-brown-700 to-brown-800 shadow-btn hover:-translate-y-0.5 transition-all duration-300">Done</button>
+  </div>
+
+</div>
+
+<script>
+const API = '/api/v1';
+
+function switchTab(tab) {
+  ['otp','password','register'].forEach(t => {
+    document.getElementById('panel-'+t).classList.toggle('hidden', t !== tab);
+    document.getElementById('tab-'+t).classList.toggle('bg-brown-600', t === tab);
+    document.getElementById('tab-'+t).classList.toggle('text-white', t === tab);
+    document.getElementById('tab-'+t).classList.toggle('text-brown-500', t !== tab);
+  });
+  document.getElementById('panel-result').classList.add('hidden');
+}
+
+function showResult(title, msg, token) {
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMsg').textContent = msg;
+  document.getElementById('tokenDisplay').textContent = token ? JSON.stringify(token, null, 2) : '';
+  ['otp','password','register'].forEach(t => document.getElementById('panel-'+t).classList.add('hidden'));
+  document.getElementById('panel-result').classList.remove('hidden');
+}
+
+// OTP Login
+async function sendOtp() {
+  const phone = document.getElementById('otpPhone').value.trim();
+  const btn = document.getElementById('otpBtn');
+  const err = document.getElementById('otpError');
+  if (phone.length !== 10) { err.textContent = 'Enter 10-digit phone'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    await fetch(API+'/auth/send-otp', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone_number:phone})});
+    document.getElementById('otpCodeSection').classList.remove('hidden');
+    document.getElementById('otpCode').focus();
+    btn.textContent = 'Verify OTP';
+    btn.onclick = verifyOtp;
+  } catch(e) { err.textContent = 'Failed'; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Send OTP'; btn.onclick = sendOtp; }
+}
+
+async function verifyOtp() {
+  const phone = document.getElementById('otpPhone').value.trim();
+  const otp = document.getElementById('otpCode').value.trim();
+  const btn = document.getElementById('otpBtn');
+  const err = document.getElementById('otpError');
+  if (otp.length !== 6) { err.textContent = 'Enter 6-digit OTP'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  btn.disabled = true; btn.textContent = 'Verifying...';
+  try {
+    const res = await fetch(API+'/auth/verify-otp', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({phone_number:phone, otp})});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail||'Failed');
+    showResult('Logged In', data.is_new_user ? 'Welcome! Complete your profile.' : 'Welcome back!', {access_token:data.access_token,refresh_token:data.refresh_token,is_new_user:data.is_new_user});
+  } catch(e) { err.textContent = e.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Verify OTP'; btn.onclick = verifyOtp; }
+}
+
+// Password Login
+async function passwordLogin() {
+  const id = document.getElementById('pwIdentifier').value.trim();
+  const pw = document.getElementById('pwPassword').value;
+  const err = document.getElementById('pwError');
+  if (!id || !pw) { err.textContent = 'Enter email/phone and password'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  try {
+    const isEmail = id.includes('@');
+    const body = isEmail ? {email:id,password:pw} : {phone_number:id,password:pw};
+    const res = await fetch(API+'/auth/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail||'Login failed');
+    showResult('Logged In', 'Welcome back!', {access_token:data.access_token,token_type:data.token_type});
+  } catch(e) { err.textContent = e.message; err.classList.remove('hidden'); }
+}
+
+// Register
+async function register() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const pw = document.getElementById('regPassword').value;
+  const err = document.getElementById('regError');
+  if (!name || !email || !pw) { err.textContent = 'Name, email and password are required'; err.classList.remove('hidden'); return; }
+  if (pw.length < 6) { err.textContent = 'Password must be at least 6 chars'; err.classList.remove('hidden'); return; }
+  err.classList.add('hidden');
+  try {
+    const body = {name,email,password:pw};
+    if (phone.length === 10) body.phone_number = phone;
+    const res = await fetch(API+'/auth/register', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail||'Registration failed');
+    showResult('Account Created', 'Welcome to Brownies!', {access_token:data.access_token,refresh_token:data.refresh_token});
+  } catch(e) { err.textContent = e.message; err.classList.remove('hidden'); }
+}
+</script>
+<script>
+  // Auto-login via URL token
+  const params = new URLSearchParams(window.location.search);
+  const autoToken = params.get('token');
+  if (autoToken) {
+    try {
+      const payload = JSON.parse(atob(autoToken.split('.')[1]));
+      showResult('Auto Logged In', 'Redirected from app with token', {
+        sub: payload.sub,
+        exp: new Date(payload.exp * 1000).toLocaleString(),
+        type: payload.type,
+        token: autoToken.substring(0, 40) + '...'
+      });
+    } catch(e) {
+      showResult('Invalid Token', 'The token in the URL is not a valid JWT', null);
+    }
+  }
+</script>
+</body>
+</html>
