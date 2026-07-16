@@ -6,14 +6,14 @@
   <title>Discover</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/app/css/app.css?v=2">
+  <link rel="stylesheet" href="/app/css/app.css?v=3">
 </head>
 <body>
   <div id="app"></div>
   <div id="matchModal"></div>
 
-  <script src="/app/js/api.js?v=2"></script>
-  <script src="/app/js/components.js?v=2"></script>
+  <script src="/app/js/api.js?v=3"></script>
+  <script src="/app/js/components.js?v=3"></script>
   <script>
     redirectIfNoAuth();
 
@@ -34,7 +34,7 @@
               ${loadingHTML('Finding people near you...')}
             </div>
             <div class="swipe-actions" id="swipeActions" style="display:none">
-              <button class="swipe-action swipe-action-nope" onclick="swipe('nope')" title="Nope">
+              <button class="swipe-action swipe-action-nope" onclick="swipe('pass')" title="Nope">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
               <button class="swipe-action swipe-action-super" onclick="swipe('super_like')" title="Super Like">
@@ -131,7 +131,7 @@
       } else if (deltaX < -100) {
         card.style.transform = 'translate(-400px, 0) rotate(-20deg)';
         card.style.opacity = '0';
-        setTimeout(() => swipe('nope'), 300);
+        setTimeout(() => swipe('pass'), 300);
       } else {
         card.style.transform = 'translate(0, 0) rotate(0deg)';
         card.style.boxShadow = '0 12px 48px rgba(45,24,16,0.12)';
@@ -147,7 +147,7 @@
       try {
         const res = await api('/discovery/swipes', {
           method: 'POST',
-          body: JSON.stringify({ target_user_id: profile.user_id, direction })
+          body: JSON.stringify({ swiped_id: profile.id, direction })
         });
         loadStats();
         renderCurrentCard();
@@ -197,7 +197,7 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight') swipe('like');
-      else if (e.key === 'ArrowLeft') swipe('nope');
+      else if (e.key === 'ArrowLeft') swipe('pass');
       else if (e.key === 'ArrowUp') swipe('super_like');
     });
 
