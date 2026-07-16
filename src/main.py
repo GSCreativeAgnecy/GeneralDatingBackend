@@ -38,6 +38,7 @@ _SETTING_KEYS = {
     "primary_color",
     "secondary_color",
     "accent_color",
+    "logo_url",
     "default_currency",
     "active_payment_processors",
     "stripe_secret_key",
@@ -176,6 +177,7 @@ upload_dir = settings.UPLOAD_DIR
 upload_dir.mkdir(parents=True, exist_ok=True)
 (upload_dir / "photos").mkdir(parents=True, exist_ok=True)
 (upload_dir / "verification").mkdir(parents=True, exist_ok=True)
+(upload_dir / "logos").mkdir(parents=True, exist_ok=True)
 app.mount("/api/v1/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
 
 if Path("static/login").exists():
@@ -200,6 +202,7 @@ async def get_branding():
         "primary_color": settings.PRIMARY_COLOR,
         "secondary_color": settings.SECONDARY_COLOR,
         "accent_color": settings.ACCENT_COLOR,
+        "logo_url": settings.LOGO_URL,
     }
 
 
@@ -229,6 +232,6 @@ async def subscribe(req: SubscribeRequest):
 
 landing_path = Path("static/landing/index.html")
 if landing_path.exists():
-    @app.get("/", response_class=HTMLResponse)
+    @app.get("/coming-soon", response_class=HTMLResponse)
     async def landing():
         return landing_path.read_text(encoding="utf-8")

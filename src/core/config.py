@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     PRIMARY_COLOR: str = "#6B3F2E"
     SECONDARY_COLOR: str = "#4A2C20"
     ACCENT_COLOR: str = "#D4A358"
+    LOGO_URL: str = ""
     DEFAULT_CURRENCY: str = "INR"
 
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/appointment"

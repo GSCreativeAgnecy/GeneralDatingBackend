@@ -1447,6 +1447,7 @@ def _build_settings_response(stored: dict) -> SettingsDashboardResponse:
         primary_color=_get_stored(stored, "primary_color", settings.PRIMARY_COLOR),
         secondary_color=_get_stored(stored, "secondary_color", settings.SECONDARY_COLOR),
         accent_color=_get_stored(stored, "accent_color", settings.ACCENT_COLOR),
+        logo_url=_get_stored(stored, "logo_url", settings.LOGO_URL),
         default_currency=_get_stored(stored, "default_currency", settings.DEFAULT_CURRENCY),
         active_payment_processors=active_processors,
         stripe_public_key=_get_stored(stored, "stripe_public_key", settings.STRIPE_PUBLIC_KEY),
@@ -1511,6 +1512,8 @@ async def update_branding(
         if not hex_pattern.match(req.accent_color.strip()):
             raise ValidationException("accent_color must be a valid hex color (e.g. #10B981)")
         updates["accent_color"] = req.accent_color.strip()
+    if req.logo_url is not None:
+        updates["logo_url"] = req.logo_url.strip()
 
     await _save_settings(db, updates)
 
@@ -1522,6 +1525,49 @@ async def update_branding(
         settings.SECONDARY_COLOR = updates["secondary_color"]
     if "accent_color" in updates:
         settings.ACCENT_COLOR = updates["accent_color"]
+    if "logo_url" in updates:
+        settings.LOGO_URL = updates["logo_url"]
+
+    await db.flush()
+    stored = await _get_all_stored(db)
+    return _build_settings_response(stored)
+
+
+@router.post("/settings/branding/logo", response_model=SettingsDashboardResponse)
+async def upload_logo(
+    file: UploadFile = File(...),
+    admin=Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    allowed_ext = {".png", ".jpg", ".jpeg", ".webp", ".svg"}
+    allowed_mimes = {"image/png", "image/jpeg", "image/webp", "image/svg+xml"}
+
+    ext = ""
+    if file.filename and "." in file.filename:
+        ext = "." + file.filename.rsplit(".", 1)[-1].lower()
+
+    if ext not in allowed_ext:
+        raise ValidationException(f"Logo must be a PNG, JPG, WEBP, or SVG file. Got: {ext}")
+
+    if file.content_type and file.content_type not in allowed_mimes:
+        raise ValidationException(f"Unsupported image type: {file.content_type}")
+
+    contents = await file.read()
+    max_size = 2 * 1024 * 1024  # 2 MB
+    if len(contents) > max_size:
+        raise ValidationException("Logo file must be under 2 MB")
+
+    import secrets
+    logo_dir = settings.UPLOAD_DIR / "logos"
+    logo_dir.mkdir(parents=True, exist_ok=True)
+    safe_name = f"logo_{secrets.token_hex(8)}{ext}"
+    logo_path = logo_dir / safe_name
+    logo_path.write_bytes(contents)
+
+    logo_url = f"/api/v1/uploads/logos/{safe_name}"
+    updates = {"logo_url": logo_url}
+    await _save_settings(db, updates)
+    settings.LOGO_URL = logo_url
 
     await db.flush()
     stored = await _get_all_stored(db)

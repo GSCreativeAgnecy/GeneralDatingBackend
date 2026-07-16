@@ -800,6 +800,7 @@ class BrandingSettingsUpdate(BaseModel):
     primary_color: Optional[str] = None
     secondary_color: Optional[str] = None
     accent_color: Optional[str] = None
+    logo_url: Optional[str] = None
 
 
 class CurrencySettingUpdate(BaseModel):
@@ -871,6 +872,7 @@ class SettingsDashboardResponse(BaseModel):
     primary_color: str
     secondary_color: str
     accent_color: str
+    logo_url: str = ""
     default_currency: str
     # Payment processors
     active_payment_processors: list[str] = []
