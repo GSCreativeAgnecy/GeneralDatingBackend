@@ -10,6 +10,7 @@ from core.database import get_db
 from core.auth_deps import get_current_user
 from core.exceptions import NotFoundException, ValidationException
 from core.uploads import save_image_upload
+from core.utils import get_max_photos_for_user
 from models import User, UserLanguage, UserPhoto
 from schemas import (
     ReorderPhotosRequest,
@@ -148,8 +149,9 @@ async def upload_photo(
         select(UserPhoto).where(UserPhoto.user_id == user.id)
     )
     existing = result.scalars().all()
-    if len(existing) >= settings.MAX_PHOTOS_PER_USER:
-        raise ValidationException(f"Maximum {settings.MAX_PHOTOS_PER_USER} photos allowed")
+    max_photos = await get_max_photos_for_user(user.id, db)
+    if len(existing) >= max_photos:
+        raise ValidationException(f"Maximum {max_photos} photos allowed")
 
     photo_url = await save_image_upload(file, user.id)
 

@@ -411,6 +411,9 @@ tailwind.config = {
           <div class="flex gap-3">
             <input id="waitlistSearch" type="text" placeholder="Search name or email..." oninput="loadWaitlist()"
               class="px-4 py-2.5 border border-brown-200 rounded-xl text-sm w-52 placeholder:text-brown-300 focus:outline-none focus:border-brown-500 transition">
+            <button onclick="exportWaitlist()" class="px-4 py-2.5 rounded-btn font-semibold text-sm text-white bg-gradient-to-br from-brown-700 to-brown-800 shadow-btn hover:-translate-y-0.5 transition-all duration-300">
+              Export CSV
+            </button>
           </div>
         </div>
         <div class="bg-white rounded-card shadow-card border border-brown-200 overflow-hidden">
@@ -2101,6 +2104,24 @@ function updateWaitlistSortArrows() {
   document.querySelectorAll('#tab-waitlist .sort-arrow').forEach(e => e.textContent = '');
   const h = document.getElementById('wsort-' + waitlistSortBy);
   if (h) h.querySelector('.sort-arrow').textContent = waitlistSortDir === 'asc' ? ' ▲' : ' ▼';
+}
+
+async function exportWaitlist() {
+  const token = localStorage.getItem('admin_token');
+  const resp = await fetch('/api/v1/admin/waitlist/export', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  if (!resp.ok) {
+    showToast('Export failed', 'error');
+    return;
+  }
+  const blob = await resp.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'waitlist_subscribers.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── STATS ──

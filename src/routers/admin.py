@@ -13,6 +13,7 @@ from core.database import get_db
 from core.auth_deps import get_current_admin
 from core.exceptions import NotFoundException, ValidationException
 from core.uploads import save_image_upload
+from core.utils import get_max_photos_for_user
 from models import (
     User, UserPhoto, UserLanguage, Match, Swipe, Message,
     BlockReport, Notification, Subscription, Plan, AppSetting, WaitlistSubscriber,
@@ -788,8 +789,9 @@ async def upload_photo(
     existing = (await db.execute(
         select(UserPhoto).where(UserPhoto.user_id == user_id)
     )).scalars().all()
-    if len(existing) >= settings.MAX_PHOTOS_PER_USER:
-        raise ValidationException(f"Maximum {settings.MAX_PHOTOS_PER_USER} photos allowed for this user")
+    max_photos = await get_max_photos_for_user(user_id, db)
+    if len(existing) >= max_photos:
+        raise ValidationException(f"Maximum {max_photos} photos allowed for this user")
 
     photo_url = await save_image_upload(file, user.id)
 
@@ -1351,6 +1353,31 @@ async def get_waitlist(
     stmt = stmt.offset((page - 1) * per_page).limit(per_page)
     result = await db.execute(stmt)
     return [AdminWaitlistOut.model_validate(s) for s in result.scalars().all()]
+
+
+@router.get("/waitlist/export")
+async def export_waitlist(
+    admin=Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(WaitlistSubscriber.name, WaitlistSubscriber.email, WaitlistSubscriber.created_at)
+        .order_by(WaitlistSubscriber.id.asc())
+    )
+    rows = result.all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Name", "Email", "Joined"])
+    for name, email, created_at in rows:
+        writer.writerow([name, email, created_at.strftime("%Y-%m-%d %H:%M") if created_at else ""])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=waitlist_subscribers.csv"},
+    )
 
 
 @router.get("/stats/gender")
