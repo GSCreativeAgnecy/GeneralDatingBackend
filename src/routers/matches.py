@@ -76,7 +76,7 @@ async def get_matches(
                 id=m.id,
                 matched_at=m.matched_at,
                 is_active=m.is_active,
-                user=UserSummaryOut(id=0, name="Premium feature", age=0, gender="", city="", intent="", photo_verified=False),
+                user=UserSummaryOut(id=0, first_name="Premium feature", age=0, gender="", city="", intent="", photo_verified=False),
             )
             for m in matches
         ]

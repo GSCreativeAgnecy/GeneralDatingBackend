@@ -6,13 +6,13 @@
   <title>Matches</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/app/css/app.css?v=5">
+  <link rel="stylesheet" href="/app/css/app.css?v=8">
 </head>
 <body>
   <div id="app"></div>
 
-  <script src="/app/js/api.js?v=5"></script>
-  <script src="/app/js/components.js?v=5"></script>
+  <script src="/app/js/api.js?v=8"></script>
+  <script src="/app/js/components.js?v=8"></script>
   <script>
     redirectIfNoAuth();
 
@@ -43,19 +43,14 @@
 
         let html = '';
         data.forEach(m => {
-          const other = m.other_user || {};
-          const lastMsg = m.last_message ? (m.last_message.is_mine ? 'You: ' : '') + m.last_message.content : 'Say hello!';
-          const photo = other.primary_photo_url || '';
+          const u = m.user || {};
+          const initial = (u.first_name || '?')[0].toUpperCase();
           html += `
             <div class="match-item" onclick="openChat(${m.id})">
-              <img class="match-item-avatar" src="${photo}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22 fill=%22%23ebd9c8%22%3E%3Crect width=%2256%22 height=%2256%22 rx=%2228%22/%3E%3Ctext x=%2228%22 y=%2236%22 text-anchor=%22middle%22 fill=%22%238b7a6e%22 font-size=%2220%22%3E👤%3C/text%3E%3C/svg%3E'" alt="">
+              <div class="match-item-avatar" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--brown-600),var(--brown-700));color:var(--white);font-weight:800;font-size:1.3rem;">${initial}</div>
               <div class="match-item-info">
-                <div class="match-item-name">${other.first_name || 'Someone'}</div>
-                <div class="match-item-last">${lastMsg}</div>
-              </div>
-              <div class="match-item-meta">
-                ${m.last_message ? `<div class="match-item-time">${timeAgo(m.last_message.created_at)}</div>` : ''}
-                ${m.unread_count > 0 ? `<div class="match-item-badge"></div>` : ''}
+                <div class="match-item-name">${u.first_name || 'Someone'}</div>
+                <div class="match-item-last">Say hello!</div>
               </div>
             </div>`;
         });
@@ -71,15 +66,15 @@
 
       try {
         const data = await api(`/matches/${matchId}`);
-        const other = data.other_user || {};
-        const photo = other.primary_photo_url || '';
-        const name = other.first_name || 'Chat';
+        const u = data.user || {};
+        const initial = (u.first_name || '?')[0].toUpperCase();
+        const name = u.first_name || 'Chat';
 
         document.getElementById('app').innerHTML = `
           <div class="app-container">
             <div class="app-header">
               <span class="app-header-back" onclick="loadMatchList()">‹</span>
-              <img class="match-item-avatar" src="${photo}" style="width:36px;height:36px;border-radius:50%;margin:0 10px;" onerror="this.style.display='none'">
+              <div class="match-item-avatar" style="display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--brown-600),var(--brown-700));color:var(--white);font-weight:800;font-size:1rem;width:36px;height:36px;border-radius:50%;margin:0 10px;flex-shrink:0">${initial}</div>
               <span class="app-header-title">${name}</span>
             </div>
             <div class="chat-container">
