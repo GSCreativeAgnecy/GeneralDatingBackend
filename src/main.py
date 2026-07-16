@@ -192,18 +192,6 @@ if Path("static/admin").exists():
 if Path("static/app").exists():
     app.mount("/app", StaticFiles(directory="static/app", html=True), name="app")
 
-    @app.get("/app/matches", response_class=HTMLResponse)
-    async def app_matches():
-        return Path("static/app/matches.html").read_text(encoding="utf-8")
-
-    @app.get("/app/profile", response_class=HTMLResponse)
-    async def app_profile():
-        return Path("static/app/profile.html").read_text(encoding="utf-8")
-
-    @app.get("/app/settings", response_class=HTMLResponse)
-    async def app_settings():
-        return Path("static/app/settings.html").read_text(encoding="utf-8")
-
 
 @app.get("/api/v1/health")
 async def health():
