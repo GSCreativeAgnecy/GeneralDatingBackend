@@ -189,6 +189,9 @@ if Path("static/checkout").exists():
 if Path("static/admin").exists():
     app.mount("/admin", StaticFiles(directory="static/admin", html=True), name="admin")
 
+if Path("static/app").exists():
+    app.mount("/app", StaticFiles(directory="static/app", html=True), name="app")
+
 
 @app.get("/api/v1/health")
 async def health():

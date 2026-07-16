@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Matches</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app/css/app.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/components.js"></script>
+  <script>
+    redirectIfNoAuth();
+
+    const state = { mode: 'list', currentMatch: null, userId: null };
+
+    async function loadMatchList() {
+      state.mode = 'list';
+      document.getElementById('app').innerHTML = `
+        <div class="app-container">
+          <div class="app-header">
+            <span class="app-header-title">Messages</span>
+          </div>
+          <div id="matchList" class="chat-container" style="height:auto; overflow-y:auto; padding-bottom:100px;">
+            ${loadingHTML('Loading matches...')}
+          </div>
+          ${buildBottomNav('matches')}
+        </div>`;
+
+      try {
+        const data = await api('/matches?limit=100');
+        const user = getStoredUser();
+        state.userId = user ? user.id : null;
+
+        if (!data || data.length === 0) {
+          document.getElementById('matchList').innerHTML = emptyHTML('💬', 'No matches yet', 'Keep swiping to find your perfect match!', '<a href="/app" class="btn btn-primary">Start Swiping</a>');
+          return;
+        }
+
+        let html = '';
+        data.forEach(m => {
+          const other = m.other_user || {};
+          const lastMsg = m.last_message ? (m.last_message.is_mine ? 'You: ' : '') + m.last_message.content : 'Say hello!';
+          const photo = other.primary_photo_url || '';
+          html += `
+            <div class="match-item" onclick="openChat(${m.id})">
+              <img class="match-item-avatar" src="${photo}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2256%22 height=%2256%22 fill=%22%23ebd9c8%22%3E%3Crect width=%2256%22 height=%2256%22 rx=%2228%22/%3E%3Ctext x=%2228%22 y=%2236%22 text-anchor=%22middle%22 fill=%22%238b7a6e%22 font-size=%2220%22%3E👤%3C/text%3E%3C/svg%3E'" alt="">
+              <div class="match-item-info">
+                <div class="match-item-name">${other.first_name || 'Someone'}</div>
+                <div class="match-item-last">${lastMsg}</div>
+              </div>
+              <div class="match-item-meta">
+                ${m.last_message ? `<div class="match-item-time">${timeAgo(m.last_message.created_at)}</div>` : ''}
+                ${m.unread_count > 0 ? `<div class="match-item-badge"></div>` : ''}
+              </div>
+            </div>`;
+        });
+        document.getElementById('matchList').innerHTML = html;
+      } catch (e) {
+        document.getElementById('matchList').innerHTML = emptyHTML('⚠️', 'Failed to load', e.message);
+      }
+    }
+
+    async function openChat(matchId) {
+      state.mode = 'chat';
+      state.currentMatch = matchId;
+
+      try {
+        const data = await api(`/matches/${matchId}`);
+        const other = data.other_user || {};
+        const photo = other.primary_photo_url || '';
+        const name = other.first_name || 'Chat';
+
+        document.getElementById('app').innerHTML = `
+          <div class="app-container">
+            <div class="app-header">
+              <span class="app-header-back" onclick="loadMatchList()">‹</span>
+              <img class="match-item-avatar" src="${photo}" style="width:36px;height:36px;border-radius:50%;margin:0 10px;" onerror="this.style.display='none'">
+              <span class="app-header-title">${name}</span>
+            </div>
+            <div class="chat-container">
+              <div class="chat-messages" id="chatMessages">
+                ${loadingHTML('Loading messages...')}
+              </div>
+              <div class="chat-input-area" id="chatInputArea">
+                <input class="chat-input" id="msgInput" type="text" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMessage()">
+                <button class="chat-send" onclick="sendMessage()">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>`;
+
+        loadMessages();
+      } catch (e) {
+        showToast(e.message, 'error');
+        loadMatchList();
+      }
+    }
+
+    async function loadMessages() {
+      try {
+        const data = await api(`/matches/${state.currentMatch}/messages?limit=200`);
+        const container = document.getElementById('chatMessages');
+
+        if (!data || data.length === 0) {
+          container.innerHTML = `<div class="chat-date-divider">No messages yet. Say hello!</div>`;
+          return;
+        }
+
+        let html = '';
+        let lastDate = '';
+        data.forEach(msg => {
+          const msgDate = new Date(msg.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+          if (msgDate !== lastDate) {
+            html += `<div class="chat-date-divider">${msgDate}</div>`;
+            lastDate = msgDate;
+          }
+          const isMine = msg.sender_id === state.userId;
+          html += `
+            <div class="chat-bubble ${isMine ? 'chat-bubble-mine' : 'chat-bubble-theirs'}">
+              ${msg.content}
+              <div class="chat-bubble-time">${formatChatTime(msg.created_at)}</div>
+            </div>`;
+        });
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+      } catch (e) {
+        showToast('Failed to load messages', 'error');
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('msgInput');
+      const content = input.value.trim();
+      if (!content) return;
+
+      try {
+        await api(`/matches/${state.currentMatch}/messages`, {
+          method: 'POST',
+          body: JSON.stringify({ content })
+        });
+        input.value = '';
+        loadMessages();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    loadMatchList();
+  </script>
+</body>
+</html>

@@ -85,6 +85,12 @@ function switchTab(tab) {
 }
 
 function showResult(title, msg, token) {
+  if (token && token.access_token) {
+    localStorage.setItem('app_token', token.access_token);
+    if (token.refresh_token) localStorage.setItem('app_refresh_token', token.refresh_token);
+    window.location.href = '/app';
+    return;
+  }
   document.getElementById('resultTitle').textContent = title;
   document.getElementById('resultMsg').textContent = msg;
   document.getElementById('tokenDisplay').textContent = token ? JSON.stringify(token, null, 2) : '';

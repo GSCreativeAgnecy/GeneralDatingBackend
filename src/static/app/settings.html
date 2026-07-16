@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app/css/app.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/components.js"></script>
+  <script>
+    redirectIfNoAuth();
+
+    async function loadSettings() {
+      document.getElementById('app').innerHTML = `
+        <div class="app-container">
+          <div class="app-header">
+            <span class="app-header-title">Settings</span>
+          </div>
+          <div id="settingsContent" class="app-content">
+            ${loadingHTML('Loading...')}
+          </div>
+          ${buildBottomNav('settings')}
+        </div>`;
+
+      try {
+        const [profile, subscription] = await Promise.all([
+          api('/profile/me').catch(() => null),
+          api('/subscriptions/me').catch(() => null),
+        ]);
+
+        storeUser(profile ? { id: profile.id, first_name: profile.first_name } : getStoredUser());
+
+        document.getElementById('settingsContent').innerHTML = `
+          <div class="settings-section">
+            <div class="settings-item" onclick="location.href='/app/profile'">
+              <div>
+                <div class="settings-item-label">Profile Details</div>
+                <div class="settings-item-sublabel">Photos, bio, preferences</div>
+              </div>
+              <span class="settings-item-arrow">›</span>
+            </div>
+          </div>
+
+          <div class="settings-section mt-4">
+            <div class="settings-item" onclick="toggleSection('prefs')">
+              <div>
+                <div class="settings-item-label">Discovery Preferences</div>
+                <div class="settings-item-sublabel">Who you see in your stack</div>
+              </div>
+              <span class="settings-item-arrow">›</span>
+            </div>
+            <div id="prefsSection" class="hidden" style="padding: 0 0 16px 0;">
+              ${buildPrefsForm(profile)}
+            </div>
+          </div>
+
+          <div class="settings-section mt-4">
+            <div class="settings-item" onclick="toggleSection('sub')">
+              <div>
+                <div class="settings-item-label">Subscription</div>
+                <div class="settings-item-sublabel">${subscription && subscription.is_active ? subscription.plan_type || 'Active' : 'Free Plan'}</div>
+              </div>
+              <span class="settings-item-arrow">›</span>
+            </div>
+            <div id="subSection" class="hidden" style="padding: 0 0 16px 0;">
+              ${buildSubscriptionInfo(subscription)}
+            </div>
+          </div>
+
+          <div class="settings-section mt-4">
+            <div class="settings-item" onclick="logout()">
+              <div>
+                <div class="settings-item-label" style="color: var(--rose-dark)">Logout</div>
+                <div class="settings-item-sublabel">Sign out of your account</div>
+              </div>
+              <span class="settings-item-arrow" style="color: var(--rose-dark)">›</span>
+            </div>
+          </div>
+        `;
+      } catch (e) {
+        document.getElementById('settingsContent').innerHTML = emptyHTML('⚠️', 'Failed to load', e.message);
+      }
+    }
+
+    function buildPrefsForm(profile) {
+      return `
+        <div class="card card-padded">
+          <div class="form-group">
+            <label class="form-label">Gender Preference</label>
+            <select class="form-select" id="prefGender">
+              <option value="">Any</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age Range</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input class="form-input" type="number" id="prefAgeMin" placeholder="18" min="18" max="100" style="width:100px">
+              <span>to</span>
+              <input class="form-input" type="number" id="prefAgeMax" placeholder="60" min="18" max="100" style="width:100px">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Distance (km)</label>
+            <input class="form-input" type="number" id="prefDistance" placeholder="50" min="1" max="500">
+          </div>
+          <button class="btn btn-primary btn-block" onclick="savePreferences()">Save Preferences</button>
+        </div>
+      `;
+    }
+
+    async function savePreferences() {
+      const updates = {};
+      const gender = document.getElementById('prefGender').value;
+      const ageMin = document.getElementById('prefAgeMin').value;
+      const ageMax = document.getElementById('prefAgeMax').value;
+      const distance = document.getElementById('prefDistance').value;
+
+      if (gender) updates.preferred_gender = gender;
+      if (ageMin) updates.min_age = parseInt(ageMin);
+      if (ageMax) updates.max_age = parseInt(ageMax);
+      if (distance) updates.max_distance_km = parseInt(distance);
+
+      try {
+        await api('/preferences', { method: 'PUT', body: JSON.stringify(updates) });
+        showToast('Preferences saved!', 'success');
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    function buildSubscriptionInfo(sub) {
+      if (sub && sub.is_active) {
+        const endsAt = sub.ends_at ? new Date(sub.ends_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        return `
+          <div class="card card-padded text-center">
+            <div style="font-size:2rem;margin-bottom:8px">✨</div>
+            <h3 class="profile-section-title">${sub.plan_type || 'Premium'}</h3>
+            <p class="text-sm text-muted mt-2">Active subscription${endsAt ? ' until ' + endsAt : ''}</p>
+            <button class="btn btn-sm btn-outline mt-4" onclick="location.href='/checkout'">Manage Plan</button>
+          </div>`;
+      }
+      return `
+        <div class="card card-padded text-center">
+          <div style="font-size:2rem;margin-bottom:8px">👑</div>
+          <h3 class="profile-section-title">Free Plan</h3>
+          <p class="text-sm text-muted mt-2">Upgrade for unlimited likes, see who liked you, and more</p>
+          <button class="btn btn-gold btn-block mt-4" onclick="location.href='/checkout'">Upgrade Now</button>
+        </div>`;
+    }
+
+    function toggleSection(id) {
+      const el = document.getElementById(id + 'Section');
+      el.classList.toggle('hidden');
+    }
+
+    function logout() {
+      clearAuth();
+      window.location.href = '/login';
+    }
+
+    loadSettings();
+  </script>
+</body>
+</html>

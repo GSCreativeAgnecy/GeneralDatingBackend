@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app/css/app.css">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/components.js"></script>
+  <script>
+    redirectIfNoAuth();
+
+    let profileData = null;
+    let editMode = false;
+
+    async function loadProfile() {
+      document.getElementById('app').innerHTML = `
+        <div class="app-container">
+          <div class="app-header">
+            <span class="app-header-title">Profile</span>
+            <span class="app-header-action" onclick="toggleEdit()" id="editBtn">Edit</span>
+          </div>
+          <div id="profileContent" class="app-content">
+            ${loadingHTML('Loading profile...')}
+          </div>
+          ${buildBottomNav('profile')}
+        </div>`;
+
+      try {
+        profileData = await api('/profile/me');
+        storeUser({ id: profileData.id, first_name: profileData.first_name });
+        renderProfile();
+      } catch (e) {
+        document.getElementById('profileContent').innerHTML = emptyHTML('⚠️', 'Failed to load', e.message);
+      }
+    }
+
+    function toggleEdit() {
+      editMode = !editMode;
+      document.getElementById('editBtn').textContent = editMode ? 'Done' : 'Edit';
+      renderProfile();
+    }
+
+    async function saveProfile() {
+      const updates = {};
+      const fields = ['first_name', 'last_name', 'dob', 'gender', 'city', 'state', 'occupation', 'education', 'bio', 'height', 'diet', 'drinking', 'smoking', 'religion', 'caste', 'intent'];
+      fields.forEach(f => {
+        const el = document.getElementById('edit-' + f);
+        if (el) updates[f] = el.value;
+      });
+
+      try {
+        await api('/profile/me', { method: 'PATCH', body: JSON.stringify(updates) });
+        showToast('Profile saved!', 'success');
+        editMode = false;
+        document.getElementById('editBtn').textContent = 'Edit';
+        profileData = await api('/profile/me');
+        renderProfile();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    function renderProfile() {
+      const p = profileData;
+      const photos = p.photos || [];
+      const primaryPhoto = photos.find(ph => ph.is_primary) || photos[0];
+      const age = p.dob ? calculateAge(p.dob) : '';
+
+      let photoHTML = '<div class="profile-photo-grid">';
+      photos.forEach(ph => {
+        photoHTML += `<img class="profile-photo-item" src="${ph.photo_url}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22133%22 fill=%22%23ebd9c8%22%3E%3Crect width=%22100%22 height=%22133%22/%3E%3Ctext x=%2250%22 y=%2266%22 text-anchor=%22middle%22 fill=%22%238b7a6e%22%3E👤%3C/text%3E%3C/svg%3E'">`;
+      });
+      if (photos.length < 6) {
+        photoHTML += `<label class="profile-photo-add">+<input type="file" accept="image/*" class="hidden" onchange="uploadPhoto(this.files[0])"></label>`;
+      }
+      photoHTML += '</div>';
+
+      let infoHTML = '';
+      if (editMode) {
+        infoHTML = `
+          <div class="profile-section">
+            <div class="profile-section-title">Basic Info</div>
+            <div class="form-group"><label class="form-label">First Name</label><input class="form-input" id="edit-first_name" value="${p.first_name || ''}"></div>
+            <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" id="edit-last_name" value="${p.last_name || ''}"></div>
+            <div class="form-group"><label class="form-label">Date of Birth</label><input class="form-input" type="date" id="edit-dob" value="${p.dob || ''}"></div>
+            <div class="form-group"><label class="form-label">Gender</label><select class="form-select" id="edit-gender">
+              <option value="">Prefer not to say</option>
+              <option value="male" ${p.gender === 'male' ? 'selected' : ''}>Male</option>
+              <option value="female" ${p.gender === 'female' ? 'selected' : ''}>Female</option>
+              <option value="other" ${p.gender === 'other' ? 'selected' : ''}>Other</option>
+            </select></div>
+          </div>
+          <div class="profile-section">
+            <div class="profile-section-title">Location</div>
+            <div class="form-group"><label class="form-label">City</label><input class="form-input" id="edit-city" value="${p.city || ''}"></div>
+            <div class="form-group"><label class="form-label">State</label><input class="form-input" id="edit-state" value="${p.state || ''}"></div>
+          </div>
+          <div class="profile-section">
+            <div class="profile-section-title">About</div>
+            <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="edit-bio" rows="3" style="resize:vertical">${p.bio || ''}</textarea></div>
+            <div class="form-group"><label class="form-label">Occupation</label><input class="form-input" id="edit-occupation" value="${p.occupation || ''}"></div>
+            <div class="form-group"><label class="form-label">Education</label><input class="form-input" id="edit-education" value="${p.education || ''}"></div>
+            <div class="form-group"><label class="form-label">Height (cm)</label><input class="form-input" type="number" id="edit-height" value="${p.height || ''}" min="100" max="250"></div>
+          </div>
+          <div class="profile-section">
+            <div class="profile-section-title">Lifestyle</div>
+            <div class="form-group"><label class="form-label">Diet</label><select class="form-select" id="edit-diet"><option value="">None</option><option value="vegetarian" ${p.diet==='vegetarian'?'selected':''}>Vegetarian</option><option value="non-vegetarian" ${p.diet==='non-vegetarian'?'selected':''}>Non-Vegetarian</option><option value="eggetarian" ${p.diet==='eggetarian'?'selected':''}>Eggetarian</option><option value="vegan" ${p.diet==='vegan'?'selected':''}>Vegan</option></select></div>
+            <div class="form-group"><label class="form-label">Drinking</label><select class="form-select" id="edit-drinking"><option value="">None</option><option value="never" ${p.drinking==='never'?'selected':''}>Never</option><option value="socially" ${p.drinking==='socially'?'selected':''}>Socially</option><option value="regularly" ${p.drinking==='regularly'?'selected':''}>Regularly</option></select></div>
+            <div class="form-group"><label class="form-label">Smoking</label><select class="form-select" id="edit-smoking"><option value="">None</option><option value="never" ${p.smoking==='never'?'selected':''}>Never</option><option value="socially" ${p.smoking==='socially'?'selected':''}>Socially</option><option value="regularly" ${p.smoking==='regularly'?'selected':''}>Regularly</option></select></div>
+          </div>
+          <div class="profile-section">
+            <div class="profile-section-title">Background</div>
+            <div class="form-group"><label class="form-label">Religion</label><input class="form-input" id="edit-religion" value="${p.religion || ''}"></div>
+            <div class="form-group"><label class="form-label">Caste</label><input class="form-input" id="edit-caste" value="${p.caste || ''}"></div>
+            <div class="form-group"><label class="form-label">Intent</label><select class="form-select" id="edit-intent"><option value="">None</option><option value="Marriage" ${p.intent==='Marriage'?'selected':''}>Marriage</option><option value="Serious Relationship" ${p.intent==='Serious Relationship'?'selected':''}>Serious Relationship</option><option value="Casual" ${p.intent==='Casual'?'selected':''}>Casual</option><option value="Friendship" ${p.intent==='Friendship'?'selected':''}>Friendship</option></select></div>
+          </div>
+          <button class="btn btn-primary btn-block mt-4" onclick="saveProfile()">Save Changes</button>
+        `;
+      } else {
+        infoHTML = `
+          <div class="profile-section">
+            <div class="profile-section-title">About</div>
+            ${p.bio ? `<p>${p.bio}</p>` : ''}
+            <div class="profile-field-row"><span class="profile-field-label">Occupation</span><span class="profile-field-value">${p.occupation || '—'}</span></div>
+            <div class="profile-field-row"><span class="profile-field-label">Education</span><span class="profile-field-value">${p.education || '—'}</span></div>
+            <div class="profile-field-row"><span class="profile-field-label">Height</span><span class="profile-field-value">${p.height ? p.height + ' cm' : '—'}</span></div>
+          </div>
+          <div class="profile-section">
+            <div class="profile-section-title">Location</div>
+            <div class="profile-field-row"><span class="profile-field-label">City</span><span class="profile-field-value">${p.city || '—'}</span></div>
+            <div class="profile-field-row"><span class="profile-field-label">State</span><span class="profile-field-value">${p.state || '—'}</span></div>
+          </div>
+          <div class="profile-section">
+            <div class="profile-section-title">Lifestyle</div>
+            <div class="profile-field-row"><span class="profile-field-label">Diet</span><span class="profile-field-value">${p.diet || '—'}</span></div>
+            <div class="profile-field-row"><span class="profile-field-label">Drinking</span><span class="profile-field-value">${p.drinking || '—'}</span></div>
+            <div class="profile-field-row"><span class="profile-field-label">Smoking</span><span class="profile-field-value">${p.smoking || '—'}</span></div>
+          </div>
+          <div class="profile-section">
+            <div class="profile-section-title">Background</div>
+            ${p.religion ? `<span class="profile-tag">${p.religion}</span>` : ''}
+            ${p.caste ? `<span class="profile-tag">${p.caste}</span>` : ''}
+            ${p.intent ? `<span class="profile-tag">${p.intent}</span>` : ''}
+            ${!p.religion && !p.caste && !p.intent ? '<p class="text-muted">No background info added yet</p>' : ''}
+          </div>
+        `;
+      }
+
+      const content = `
+        <div class="profile-header">
+          <img class="profile-avatar" src="${primaryPhoto ? primaryPhoto.photo_url : ''}" alt="" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 fill=%22%23ebd9c8%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2250%22/%3E%3Ctext x=%2250%22 y=%2265%22 text-anchor=%22middle%22 fill=%22%238b7a6e%22%3E👤%3C/text%3E%3C/svg%3E'">
+          <div class="profile-name">${[p.first_name, p.last_name].filter(Boolean).join(' ') || 'Your Name'}</div>
+          <div class="profile-subtitle">${[age ? age + ' yrs' : '', p.gender || ''].filter(Boolean).join(' · ')}</div>
+        </div>
+        <div class="profile-section">
+          <div class="profile-section-title">Photos (${photos.length}/6)</div>
+          ${photoHTML}
+        </div>
+        ${infoHTML}
+      `;
+
+      document.getElementById('profileContent').innerHTML = content;
+    }
+
+    async function uploadPhoto(file) {
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const resp = await fetch(BASE + '/profile/photos', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getToken() },
+          body: formData
+        });
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ detail: 'Upload failed' }));
+          throw new Error(err.detail || 'Upload failed');
+        }
+        showToast('Photo uploaded!', 'success');
+        profileData = await api('/profile/me');
+        renderProfile();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    function calculateAge(dobStr) {
+      if (!dobStr) return '';
+      try {
+        const dob = new Date(dobStr);
+        const now = new Date();
+        let age = now.getFullYear() - dob.getFullYear();
+        const m = now.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+        return age;
+      } catch { return ''; }
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Discover</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app/css/app.css">
+</head>
+<body>
+  <div id="app"></div>
+  <div id="matchModal"></div>
+
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/components.js"></script>
+  <script>
+    redirectIfNoAuth();
+
+    let profiles = [];
+    let currentIndex = 0;
+    let startX = 0, startY = 0, deltaX = 0, deltaY = 0;
+    let isDragging = false;
+    let statistics = { likes_remaining: 0, super_likes_remaining: 0 };
+
+    async function loadDiscovery() {
+      document.getElementById('app').innerHTML = `
+        <div class="app-container">
+          <div class="app-header">
+            <span class="app-header-title">Discover</span>
+          </div>
+          <div class="swipe-area">
+            <div class="swipe-stack" id="swipeStack">
+              ${loadingHTML('Finding people near you...')}
+            </div>
+            <div class="swipe-actions" id="swipeActions" style="display:none">
+              <button class="swipe-action swipe-action-nope" onclick="swipe('nope')" title="Nope">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+              <button class="swipe-action swipe-action-super" onclick="swipe('super_like')" title="Super Like">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              </button>
+              <button class="swipe-action swipe-action-like" onclick="swipe('like')" title="Like">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </div>
+          </div>
+          ${buildBottomNav('discovery')}
+        </div>`;
+
+      try {
+        const data = await api('/discovery?limit=60');
+        profiles = data;
+        currentIndex = 0;
+        document.getElementById('swipeActions').style.display = 'flex';
+        renderCurrentCard();
+        loadStats();
+      } catch (e) {
+        showToast(e.message, 'error');
+        document.getElementById('swipeStack').innerHTML = emptyHTML('😔', 'No profiles found', 'Check back later or update your preferences.', '<a href="/app/settings" class="btn btn-primary">Update Preferences</a>');
+      }
+    }
+
+    function renderCurrentCard() {
+      if (currentIndex >= profiles.length) {
+        document.getElementById('swipeStack').innerHTML = emptyHTML('🎉', 'All caught up!', 'You\'ve seen everyone in your area. Check back later or update your preferences.', '<a href="/app/settings" class="btn btn-primary">Update Preferences</a>');
+        document.getElementById('swipeActions').style.display = 'none';
+        return;
+      }
+
+      const p = profiles[currentIndex];
+      const photo = p.photos && p.photos.length > 0 ? p.photos[0].photo_url : '';
+      const age = p.age || (p.dob ? calculateAge(p.dob) : '');
+      const location = p.city ? `${p.city}` : '';
+      const intent = p.intent || '';
+
+      document.getElementById('swipeStack').innerHTML = `
+        <div class="swipe-card" id="currentCard"
+             onmousedown="dragStart(event)" ontouchstart="dragStart(event)"
+             onmousemove="dragMove(event)" ontouchmove="dragMove(event)"
+             onmouseup="dragEnd()" ontouchend="dragEnd()"
+             onmouseleave="dragEnd()">
+          <img class="swipe-card-photo" src="${photo || ''}" alt="${p.first_name || ''}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22400%22 fill=%22%23ebd9c8%22%3E%3Crect width=%22300%22 height=%22400%22/%3E%3Ctext x=%22150%22 y=%22200%22 text-anchor=%22middle%22 fill=%22%238b7a6e%22 font-size=%2236%22%3E👤%3C/text%3E%3C/svg%3E'">
+          <div class="swipe-card-info">
+            <div class="swipe-card-name-age">
+              <span class="swipe-card-name">${p.first_name || 'Someone'}</span>
+              ${age ? `<span class="swipe-card-age">${age}</span>` : ''}
+            </div>
+            <div class="swipe-card-detail">${[p.occupation, p.education, location].filter(Boolean).join(' · ') || 'New here'}</div>
+            ${intent ? `<div class="swipe-card-intent">${intent}</div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function dragStart(e) {
+      const point = e.touches ? e.touches[0] : e;
+      startX = point.clientX;
+      startY = point.clientY;
+      isDragging = true;
+      document.getElementById('currentCard').style.transition = 'none';
+    }
+
+    function dragMove(e) {
+      if (!isDragging) return;
+      const point = e.touches ? e.touches[0] : e;
+      deltaX = point.clientX - startX;
+      deltaY = point.clientY - startY;
+
+      const card = document.getElementById('currentCard');
+      if (!card) return;
+      const rot = deltaX * 0.05;
+      card.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rot}deg)`;
+
+      const opacity = 1 - Math.min(Math.abs(deltaX) / 300, 1);
+      if (deltaX > 80) card.style.boxShadow = '0 4px 24px rgba(22,163,74,0.3)';
+      else if (deltaX < -80) card.style.boxShadow = '0 4px 24px rgba(201,77,68,0.3)';
+      else card.style.boxShadow = '0 12px 48px rgba(45,24,16,0.12)';
+    }
+
+    function dragEnd() {
+      if (!isDragging) return;
+      isDragging = false;
+      const card = document.getElementById('currentCard');
+      if (!card) return;
+      card.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+
+      if (deltaX > 100) {
+        card.style.transform = 'translate(400px, 0) rotate(20deg)';
+        card.style.opacity = '0';
+        setTimeout(() => swipe('like'), 300);
+      } else if (deltaX < -100) {
+        card.style.transform = 'translate(-400px, 0) rotate(-20deg)';
+        card.style.opacity = '0';
+        setTimeout(() => swipe('nope'), 300);
+      } else {
+        card.style.transform = 'translate(0, 0) rotate(0deg)';
+        card.style.boxShadow = '0 12px 48px rgba(45,24,16,0.12)';
+      }
+      deltaX = 0; deltaY = 0;
+    }
+
+    async function swipe(direction) {
+      if (currentIndex >= profiles.length) return;
+      const profile = profiles[currentIndex];
+      currentIndex++;
+
+      try {
+        const res = await api('/discovery/swipes', {
+          method: 'POST',
+          body: JSON.stringify({ target_user_id: profile.user_id, direction })
+        });
+        loadStats();
+        renderCurrentCard();
+
+        if (res && res.match) {
+          showMatchPopup(profile);
+        }
+      } catch (e) {
+        showToast(e.message, 'error');
+        renderCurrentCard();
+      }
+    }
+
+    async function loadStats() {
+      try {
+        statistics = await api('/discovery/swipes/stats');
+      } catch {}
+    }
+
+    function showMatchPopup(profile) {
+      const photo = profile.photos && profile.photos.length > 0 ? profile.photos[0].photo_url : '';
+      document.getElementById('matchModal').innerHTML = `
+        <div class="match-overlay" onclick="this.remove()">
+          <div class="match-popup" onclick="event.stopPropagation()">
+            <div class="match-popup-avatars">
+              <img class="match-popup-avatar" src="${photo || ''}" onerror="this.style.display='none'">
+            </div>
+            <h2>It's a <span>Match!</span></h2>
+            <p>You and ${profile.first_name || 'Someone'} liked each other</p>
+            <button class="btn btn-primary btn-block" onclick="document.getElementById('matchModal').innerHTML='';location.href='/app/matches'">Send a Message</button>
+            <button class="btn btn-outline btn-block mt-2" onclick="document.getElementById('matchModal').innerHTML=''">Keep Swiping</button>
+          </div>
+        </div>`;
+    }
+
+    function calculateAge(dobStr) {
+      if (!dobStr) return '';
+      try {
+        const dob = new Date(dobStr);
+        const now = new Date();
+        let age = now.getFullYear() - dob.getFullYear();
+        const m = now.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < dob.getDate())) age--;
+        return age;
+      } catch { return ''; }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') swipe('like');
+      else if (e.key === 'ArrowLeft') swipe('nope');
+      else if (e.key === 'ArrowUp') swipe('super_like');
+    });
+
+    loadDiscovery();
+  </script>
+</body>
+</html>
