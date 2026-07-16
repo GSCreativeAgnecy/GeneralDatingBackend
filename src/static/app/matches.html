@@ -6,13 +6,13 @@
   <title>Matches</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/app/css/app.css?v=4">
+  <link rel="stylesheet" href="/app/css/app.css?v=5">
 </head>
 <body>
   <div id="app"></div>
 
-  <script src="/app/js/api.js?v=4"></script>
-  <script src="/app/js/components.js?v=4"></script>
+  <script src="/app/js/api.js?v=5"></script>
+  <script src="/app/js/components.js?v=5"></script>
   <script>
     redirectIfNoAuth();
 
@@ -23,7 +23,7 @@
       document.getElementById('app').innerHTML = `
         <div class="app-container">
           <div class="app-header">
-            <span class="app-header-title">Messages</span>
+            <span class="app-header-title" id="headerTitle">Messages</span>
           </div>
           <div id="matchList" class="chat-container" style="height:auto; overflow-y:auto; padding-bottom:100px;">
             ${loadingHTML('Loading matches...')}
@@ -98,7 +98,10 @@
         loadMessages();
       } catch (e) {
         showToast(e.message, 'error');
-        loadMatchList();
+    loadMatchList();
+    loadBranding().then(name => {
+      if (name) { const h = document.getElementById('headerTitle'); if (h) h.textContent = name; }
+    });
       }
     }
 
