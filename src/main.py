@@ -3,7 +3,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sqlalchemy import select, text
@@ -254,3 +254,12 @@ if landing_path.exists():
     @app.get("/coming-soon", response_class=HTMLResponse)
     async def landing():
         return landing_path.read_text(encoding="utf-8")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    svg = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="8" fill="#6b3f2e"/>
+      <text x="16" y="23" text-anchor="middle" font-size="20" fill="white">♥</text>
+    </svg>'''
+    return Response(content=svg, media_type="image/svg+xml")
