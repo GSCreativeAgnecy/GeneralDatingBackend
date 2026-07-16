@@ -500,6 +500,43 @@ input, button, textarea, select { font-family: inherit; }
 }
 .photo-dot.active { background: var(--gold); width: 20px; border-radius: 4px; }
 
+/* ═══ Filter Modal ═══ */
+.filter-backdrop {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.4);
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.filter-panel {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px; max-height: 85dvh;
+  background: var(--white); border-radius: 20px 20px 0 0;
+  z-index: 101; overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateX(-50%) translateY(100%); } to { transform: translateX(-50%) translateY(0); } }
+.filter-header {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--brown-100);
+  background: var(--white);
+}
+.filter-body { padding: 20px; }
+.filter-actions {
+  display: flex; gap: 12px; padding: 16px 20px;
+  border-top: 1px solid var(--brown-100);
+}
+.filter-clear {
+  font-size: 0.85rem; color: var(--text-muted); cursor: pointer;
+  background: none; border: none; padding: 8px;
+}
+.filter-clear:hover { color: var(--rose-dark); }
+.filter-badge {
+  position: absolute; top: -2px; right: -4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold);
+}
+
 /* ═══ Desktop Responsive ═══ */
 @media (min-width: 768px) {
   .app-container { border-radius: var(--radius-lg); margin-top: 12px; margin-bottom: 12px; }

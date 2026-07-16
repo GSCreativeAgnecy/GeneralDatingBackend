@@ -6,14 +6,14 @@
   <title>Discover</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/app/css/app.css?v=5">
+  <link rel="stylesheet" href="/app/css/app.css?v=6">
 </head>
 <body>
   <div id="app"></div>
   <div id="matchModal"></div>
 
-  <script src="/app/js/api.js?v=5"></script>
-  <script src="/app/js/components.js?v=5"></script>
+  <script src="/app/js/api.js?v=6"></script>
+  <script src="/app/js/components.js?v=6"></script>
   <script>
     redirectIfNoAuth();
 
@@ -22,12 +22,142 @@
     let startX = 0, startY = 0, deltaX = 0, deltaY = 0;
     let isDragging = false;
     let statistics = { likes_remaining: 0, super_likes_remaining: 0 };
+    let filterPrefs = { preferred_gender: '', min_age: '', max_age: '', intent_filter: '', city_filter: '' };
+    let hasActiveFilters = false;
+
+    async function loadFilterPrefs() {
+      try {
+        const p = await api('/preferences');
+        filterPrefs.preferred_gender = p.preferred_gender || '';
+        filterPrefs.min_age = p.min_age || '';
+        filterPrefs.max_age = p.max_age || '';
+        filterPrefs.intent_filter = p.intent_filter || '';
+        filterPrefs.city_filter = p.city_filter || '';
+        hasActiveFilters = !!(filterPrefs.preferred_gender || filterPrefs.intent_filter || filterPrefs.city_filter);
+        updateFilterBadge();
+      } catch {}
+    }
+
+    function updateFilterBadge() {
+      const badge = document.getElementById('filterBadge');
+      if (badge) badge.classList.toggle('hidden', !hasActiveFilters);
+    }
+
+    function showFilterPanel() {
+      const backdrop = document.createElement('div');
+      backdrop.className = 'filter-backdrop';
+      backdrop.onclick = () => backdrop.remove();
+      document.body.appendChild(backdrop);
+
+      const panel = document.createElement('div');
+      panel.className = 'filter-panel';
+      panel.innerHTML = `
+        <div class="filter-header">
+          <h3 style="font-size:1.1rem;font-weight:700">Filters</h3>
+          <button class="filter-clear" onclick="closeFilterPanel()">Done</button>
+        </div>
+        <div class="filter-body">
+          <div class="form-group">
+            <label class="form-label">Show Me</label>
+            <select class="form-select" id="filtGender">
+              <option value="">Everyone</option>
+              <option value="male" ${filterPrefs.preferred_gender === 'male' ? 'selected' : ''}>Men</option>
+              <option value="female" ${filterPrefs.preferred_gender === 'female' ? 'selected' : ''}>Women</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age Range</label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <input class="form-input" type="number" id="filtAgeMin" placeholder="18" min="18" max="100" value="${filterPrefs.min_age}" style="flex:1">
+              <span class="text-muted">to</span>
+              <input class="form-input" type="number" id="filtAgeMax" placeholder="50" min="18" max="100" value="${filterPrefs.max_age}" style="flex:1">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Looking For</label>
+            <select class="form-select" id="filtIntent">
+              <option value="">Any</option>
+              <option value="Marriage" ${filterPrefs.intent_filter === 'Marriage' ? 'selected' : ''}>Marriage</option>
+              <option value="Serious Relationship" ${filterPrefs.intent_filter === 'Serious Relationship' ? 'selected' : ''}>Serious Relationship</option>
+              <option value="Casual" ${filterPrefs.intent_filter === 'Casual' ? 'selected' : ''}>Casual</option>
+              <option value="Friendship" ${filterPrefs.intent_filter === 'Friendship' ? 'selected' : ''}>Friendship</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">City</label>
+            <input class="form-input" type="text" id="filtCity" placeholder="Any city" value="${filterPrefs.city_filter}">
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-outline btn-block" onclick="clearFilters()">Clear All</button>
+          <button class="btn btn-primary btn-block" onclick="applyFilters()">Apply</button>
+        </div>
+      `;
+      backdrop.appendChild(panel);
+      document.body.appendChild(backdrop);
+    }
+
+    function closeFilterPanel() {
+      document.querySelectorAll('.filter-backdrop').forEach(el => el.remove());
+    }
+
+    async function applyFilters() {
+      filterPrefs.preferred_gender = document.getElementById('filtGender').value;
+      filterPrefs.min_age = document.getElementById('filtAgeMin').value;
+      filterPrefs.max_age = document.getElementById('filtAgeMax').value;
+      filterPrefs.intent_filter = document.getElementById('filtIntent').value;
+      filterPrefs.city_filter = document.getElementById('filtCity').value;
+
+      const payload = {};
+      if (filterPrefs.preferred_gender) payload.preferred_gender = filterPrefs.preferred_gender;
+      if (filterPrefs.min_age) payload.min_age = parseInt(filterPrefs.min_age);
+      if (filterPrefs.max_age) payload.max_age = parseInt(filterPrefs.max_age);
+      payload.intent_filter = filterPrefs.intent_filter || null;
+      payload.city_filter = filterPrefs.city_filter || null;
+
+      try {
+        await api('/preferences', { method: 'PUT', body: JSON.stringify(payload) });
+        hasActiveFilters = !!(filterPrefs.preferred_gender || filterPrefs.intent_filter || filterPrefs.city_filter);
+        updateFilterBadge();
+        closeFilterPanel();
+        profiles = [];
+        currentIndex = 0;
+        loadDiscovery();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    async function clearFilters() {
+      try {
+        await api('/preferences', {
+          method: 'PUT',
+          body: JSON.stringify({
+            preferred_gender: null, intent_filter: null, city_filter: null,
+            min_age: 18, max_age: 50
+          })
+        });
+        filterPrefs = { preferred_gender: '', min_age: 18, max_age: 50, intent_filter: '', city_filter: '' };
+        hasActiveFilters = false;
+        updateFilterBadge();
+        closeFilterPanel();
+        profiles = [];
+        currentIndex = 0;
+        loadDiscovery();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
 
     async function loadDiscovery() {
       document.getElementById('app').innerHTML = `
         <div class="app-container">
           <div class="app-header">
             <span class="app-header-title" id="headerTitle">Discover</span>
+            <button class="btn-icon" onclick="showFilterPanel()" style="position:relative" id="filterBtn">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              <span class="filter-badge hidden" id="filterBadge"></span>
+            </button>
           </div>
           <div class="swipe-area">
             <div class="swipe-stack" id="swipeStack">
@@ -202,6 +332,7 @@
     });
 
     loadDiscovery();
+    loadFilterPrefs();
     loadBranding().then(name => {
       if (name) {
         const hdr = document.getElementById('headerTitle');
