@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title id="pageTitle">Brownies — Dating, Desi Style</title>
+  <title id="pageTitle">Brownies — Matrimony, Desi Style</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -504,9 +504,9 @@
     <div class="hero-grid">
       <div>
         <div class="hero-badge">🔥 Launching in Mumbai · Delhi · Hyderabad</div>
-        <h1>Dating, <span>Desi Style.</span></h1>
+        <h1>Matrimony, <span>Desi Style.</span></h1>
         <p>
-          <span id="heroAppName">Brownies</span> is the dating app built for India — by Indians.
+          <span id="heroAppName">Brownies</span> is the matrimony app built for India — by Indians.
           Real connections, cultural vibe, and zero awkwardness.
           Hyderabad, Mumbai, Delhi — your city is waiting.
         </p>
@@ -616,7 +616,7 @@
     <div class="container">
       <div class="section-tag">Features</div>
       <h2 class="section-title">Built Different. Built for India.</h2>
-      <p class="section-desc">From Tinder refugees to serious relationship seekers — Brownies has something for everyone.</p>
+      <p class="section-desc">From Tinder refugees to serious relationship seekers — <span id="sectionAppName">Brownies</span> has something for everyone.</p>
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon" style="background:#fef3c7;color:#d97706">🌐</div>
@@ -678,11 +678,11 @@
     </div>
   </section>
 
-  <!-- ═══ WHY BROWNIES ═══ -->
+  <!-- ═══ WHY US ═══ -->
   <section>
     <div class="container">
-      <div class="section-tag">Why Brownies?</div>
-      <h2 class="section-title">Because Dating in India Deserves Better</h2>
+      <div class="section-tag">Why <span id="sectionTagAppName">Brownies</span>?</div>
+      <h2 class="section-title">Because Matrimony in India Deserves Better</h2>
       <p class="section-desc">No more swiping past rishta aunties or matching with scammers.</p>
       <div class="why-grid">
         <div class="why-item">
@@ -736,7 +736,7 @@
 
   <!-- ═══ FOOTER ═══ -->
   <footer>
-    <p>Made with ❤️ in India 🇮🇳 — <span id="footerAppName">Brownies</span> Dating App</p>
+    <p>Made with ❤️ in India 🇮🇳 — <span id="footerAppName">Brownies</span> Matrimony App</p>
     <p style="margin-top:4px;font-size:0.8rem">© 2026 <span id="footerCopyName">Brownies</span>. All rights reserved.</p>
   </footer>
 
@@ -797,7 +797,9 @@
         if (data.app_name) {
           document.getElementById('brandName').textContent = data.app_name;
           document.getElementById('heroAppName').textContent = data.app_name;
-          document.getElementById('pageTitle').textContent = data.app_name + ' — Dating, Desi Style';
+          document.getElementById('sectionAppName').textContent = data.app_name;
+          document.getElementById('sectionTagAppName').textContent = data.app_name;
+          document.getElementById('pageTitle').textContent = data.app_name + ' — Matrimony, Desi Style';
           document.getElementById('footerAppName').textContent = data.app_name;
           document.getElementById('footerCopyName').textContent = data.app_name;
         }

@@ -10,7 +10,7 @@ async def send_otp(phone: str, otp: str) -> bool:
 
     payload = {
         "phoneNumber": phone,
-        "message": f"Your Brownies verification code is: {otp}",
+        "message": f"Your {settings.APP_NAME} verification code is: {otp}",
     }
     headers = {"Content-Type": "application/json"}
     if api_key:

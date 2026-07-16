@@ -39,13 +39,13 @@ def send_email(to: str, subject: str, body_html: str) -> bool:
 
 
 def notify_new_subscriber(name: str, email: str) -> bool:
-    subject = f"New Brownies sign-up: {name}"
+    subject = f"New {settings.APP_NAME} sign-up: {name}"
     body = f"""
     <h2>New Waitlist Sign-up</h2>
     <p><strong>Name:</strong> {name}</p>
     <p><strong>Email:</strong> {email}</p>
     <hr>
-    <p style="color:#888;font-size:12px">Brownies Landing Page</p>
+    <p style="color:#888;font-size:12px">{settings.APP_NAME} Landing Page</p>
     """
     _, _, _, _, _, notify = _smtp_config()
     return send_email(notify, subject, body)

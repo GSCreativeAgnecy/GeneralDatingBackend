@@ -11,7 +11,7 @@ def send_otp(phone: str, otp: str) -> bool:
         return False
     try:
         msg = _client().messages.create(
-            body=f"Your Brownies verification code is: {otp}",
+            body=f"Your {settings.APP_NAME} verification code is: {otp}",
             from_=settings.TWILIO_PHONE,
             to=phone,
         )

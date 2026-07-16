@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Brownies — Login</title>
+  <title>Ardhang Matrimony — Login</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','-apple-system','BlinkMacSystemFont','sans-serif']},colors:{brown:{50:'#fcf8f3',100:'#f5ebe1',200:'#ebd9c8',300:'#d9b99e',400:'#c49a78',500:'#a8774f',600:'#8b5a3c',700:'#6b3f2e',800:'#4a2c20',900:'#2d1810'},gold:{DEFAULT:'#d4a358',light:'#f0d6a8'},rose:{DEFAULT:'#e8736a',dark:'#c94d44'},cream:'#fff8f0'},boxShadow:{card:'0 4px 24px rgba(45,24,16,0.08)','card-lg':'0 12px 48px rgba(45,24,16,0.12)',btn:'0 4px 16px rgba(74,44,32,0.3)'},borderRadius:{card:'20px',btn:'60px'}}}}</script>
@@ -16,8 +16,8 @@
   <!-- Logo -->
   <div class="text-center mb-8">
     <div class="w-16 h-16 bg-gradient-to-br from-brown-600 to-brown-700 rounded-2xl mx-auto mb-3 flex items-center justify-center text-white text-2xl font-bold">B</div>
-    <h1 class="text-2xl font-extrabold text-brown-800">Brownies</h1>
-    <p class="text-brown-500 text-sm">Dating, Desi Style</p>
+    <h1 class="text-2xl font-extrabold text-brown-800">Ardhang Matrimony</h1>
+    <p class="text-brown-500 text-sm">Matrimony, Desi Style</p>
   </div>
 
   <!-- Tabs -->
@@ -158,7 +158,7 @@ async function register() {
     const res = await fetch(API+'/auth/register', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail||'Registration failed');
-    showResult('Account Created', 'Welcome to Brownies!', {access_token:data.access_token,refresh_token:data.refresh_token});
+    showResult('Account Created', 'Welcome to Ardhang Matrimony!', {access_token:data.access_token,refresh_token:data.refresh_token});
   } catch(e) { err.textContent = e.message; err.classList.remove('hidden'); }
 }
 </script>
